@@ -27,5 +27,4 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_trig import trigsu
 
 ###### Oleksii
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_triggers import susy_1l_Trigg
-#from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_filters import susy_1l_Filters
-
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_filters import susy_1l_FiltersMC, susy_1l_FiltersData
