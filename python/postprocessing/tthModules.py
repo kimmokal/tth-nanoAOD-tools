@@ -20,7 +20,7 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jecUncertainties impor
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepdata
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepSIG
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepMC
-# it has  an issue 
+# it has  an issue --> posted to HN
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_gen import genpartsusymod
 # for Trig
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_trig import trigsusysusymod

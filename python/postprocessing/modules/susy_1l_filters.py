@@ -5,7 +5,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collect
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 
-filterName = "/afs/cern.ch/user/k/kirschen/public/forSUSY/dummyFilterlist.txt" #to process 2016 data quickly...
+filterName = "/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/data/dummyFilterlist.txt" #to process 2016 data quickly...
 filterList = None
 
 
@@ -17,17 +17,10 @@ def readList(fname):
             sline = line.split(":")
             if len(sline) != 3: continue
             evList.add((int(sline[0]),int(sline[1]),int(sline[2])))
-
-
-    print 80*"#"
-    print "MET filters"
-    print "Loaded %i events into CSC Filter list" %len(evList)
-    print 80*"#"
-
     return evList
 
 
-class selectionProducer(Module):
+class susy1lepFilter(Module):
     def __init__(self, isData):
         self.branches = [
             'passFilters','passFiltersMoriond2017Tight','passCSCFilterList',
@@ -104,5 +97,5 @@ class selectionProducer(Module):
         
 
 # define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
-susy_1l_FiltersMC   = lambda : selectionProducer(False)
-susy_1l_FiltersData = lambda : selectionProducer(True)
+susy_1l_FiltersMC   = lambda : susy1lepFilter(False)
+susy_1l_FiltersData = lambda : susy1lepFilter(True)
