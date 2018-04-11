@@ -42,31 +42,31 @@ class susy1lepTrig(Module):
 		trig_IsoEle27T = getattr(event, "HLT_Ele27_WPTight_Gsf")
 		if hasattr(event, "HLT_Ele15_IsoVVVL_PFHT400"):
 			trig_EleHT400 = getattr(event, "HLT_Ele15_IsoVVVL_PFHT400")
-		else :trig_EleHT400 = True
+		else :trig_EleHT400 = False
 		if hasattr(event, "HLT_Ele15_IsoVVVL_PFHT350"):
 			trig_EleHT350 = getattr(event, "HLT_Ele15_IsoVVVL_PFHT350")
-		else : trig_EleHT350 = True 
+		else : trig_EleHT350 = False 
 		
 		# triggers for MuOR:
 		trig_Mu50 = getattr(event, "HLT_Mu50")
 		trig_IsoMu24 = getattr(event, "HLT_IsoMu24") or getattr(event, "HLT_IsoTkMu24")
 		if hasattr(event, "HLT_Mu15_IsoVVVL_PFHT400"):
 			trig_MuHT400 = getattr(event, "HLT_Mu15_IsoVVVL_PFHT400")
-		else : trig_MuHT400 = True 
+		else : trig_MuHT400 = False 
 		if hasattr(event, "HLT_Mu15_IsoVVVL_PFHT350"): 
 			trig_MuHT350 = getattr(event, "HLT_Mu15_IsoVVVL_PFHT350")
-		else : trig_MuHT350 = True 
+		else : trig_MuHT350 = False 
 		
 		# triggers for MetOR:
 		if hasattr(event, "HLT_PFMET100_PFMHT100_IDTight"):
 			trig_MET100MHT100 = getattr(event, "HLT_PFMET100_PFMHT100_IDTight")
-		else : trig_MET100MHT100 = True
+		else : trig_MET100MHT100 = False
 		if hasattr(event, "HLT_PFMET110_PFMHT110_IDTight"):
 			trig_MET110MHT110 = getattr(event, "HLT_PFMET110_PFMHT110_IDTight")
-		else :trig_MET110MHT110 = True 
+		else :trig_MET110MHT110 = False 
 		if hasattr(event, "HLT_PFMET120_PFMHT120_IDTight"):
 			trig_MET120MHT120 = getattr(event, "HLT_PFMET120_PFMHT120_IDTight")
-		else : trig_MET120MHT120 = True 
+		else : trig_MET120MHT120 = False 
 		
 		
 		if 'Ele' in self.inFile or 'Mu' in self.inFile:

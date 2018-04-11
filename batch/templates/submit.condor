@@ -5,6 +5,7 @@ executable          = @EXESH
 #transfer_executable = True
 #WhenToTransferOutput = On_Exit
 ShouldTransferFiles  = yes
+Transfer_Input_Files = @X509
 #+IsFastQueueJob      = True
 universe            = vanilla
 #input               = /nfs/dust/my/path/to/data/mypayload.data

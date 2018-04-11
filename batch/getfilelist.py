@@ -13,7 +13,7 @@ import shutil
 ## to be changed by user 
 workarea = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src'
 exearea = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch'
-X509 = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch/x509up_u29118'
+X509 = 'x509up_u29118'
 ## to be kept 
 condTEMP = './templates/submit.condor'
 wrapTEMP = './templates/wrapnanoPost.sh'
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 			os.system("cp "+condTEMP+" "+dirname+"/Condor.submit"+str(i))
 			os.system("cp "+wrapTEMP+" "+dirname+"/Warp"+str(i)+".sh")		
 			s1 = open(dirname+"/Condor.submit"+str(i)).read()
-			s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir)
+			s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509)
 			f1 = open(dirname+"/Condor.submit"+str(i), 'w')
 			f1.write(s1)
 			f1.close()
