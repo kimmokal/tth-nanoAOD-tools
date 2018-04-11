@@ -2,7 +2,6 @@
 ########### institute : DESY #######################
 ########### Email : ashraf.mohamed@desy.de #########
 ########### Date : April 2018#######################
-
 import sys,os, re, pprint
 import re
 
@@ -11,13 +10,13 @@ import commands
 import subprocess
 import shutil
 
-
-
-X509 = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch/x509up_u29118'
-condTEMP = './templates/submit.condor'
-wrapTEMP = './templates/wrapnanoPost.sh'
+## to be changed by user 
 workarea = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src'
 exearea = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch'
+X509 = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch/x509up_u29118'
+## to be kept 
+condTEMP = './templates/submit.condor'
+wrapTEMP = './templates/wrapnanoPost.sh'
 
 if  os.path.exists('submit_all_to_batch_HTC.sh'):
    os.remove('submit_all_to_batch_HTC.sh')
