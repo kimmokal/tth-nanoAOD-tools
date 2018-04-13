@@ -8,6 +8,7 @@ ShouldTransferFiles  = yes
 Transfer_Input_Files = @X509
 #+IsFastQueueJob      = True
 universe            = vanilla
++RequestRuntime     = @time
 #input               = /nfs/dust/my/path/to/data/mypayload.data
 output              = @LOGS/mypayload_$(Cluster)_$(Process)out
 error               = @LOGS/mypayload_$(Cluster)_$(Process).error
