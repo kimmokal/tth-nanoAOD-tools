@@ -32,15 +32,21 @@ class genpartsusy(Module):
 		pass
 	def analyze(self, event):
 		"""process event, return True (go to next module) or False (fail, go to next event)"""
-		genpart_ = Collection(event, "GenPart")
+		genpart = Collection(event, "GenPart")
 		# The following variables still need to be double-checked for validity
-		genLeps = [l for l in genpart_ if genpart_.pdgId == (13 or -13 or 11 or -11) ]
-		genTaus = [l for l in genpart_ if genpart_.pdgId == (15 or -15)]
-		genParts = [l for l in genpart_]
+		genLeps = [l for l in genpart if l.pdgId == (13 or -13 or 11 or -11) ]
+		genLepFromTau = [l for l in genLeps if l.statusFlags == 2]
+		genTaus = [l for l in genpart if l.pdgId == (15 or -15)]
+		genParts = [l for l in genpart]
 		#leptons from tau decay https://github.com/cms-nanoAOD/cmssw/blob/master/PhysicsTools/NanoAOD/python/genparticles_cff.py#L67
-		genLepsAndLepsFromTaus = [l for l in genLeps] + [k for k in genLeps if genLeps.statusFlags == 2]
-		print genLepsAndLepsFromTaus
-		ngenLeps = len(genLeps); ngenTaus = len(genTaus); ngenParts = len (genParts); ngenLepsAndLepsFromTau = len(genLepsAndLepsFromTaus)
+		genLepsAndLepsFromTaus = [l for l in genLeps] + [ l for l in genLepFromTau]
+		
+		#print genLepsAndLepsFromTaus
+		ngenLepFromTau = len(genLepFromTau)
+		ngenLeps = len(genLeps)
+		ngenTaus = len(genTaus)
+		ngenParts = len (genParts)
+		ngenLepsAndLepsFromTau = len(genLepsAndLepsFromTaus)
 		
 		GenDeltaPhiLepWSum=-999
 		GenDeltaPhiLepWDirect=-999
@@ -76,7 +82,7 @@ class genpartsusy(Module):
 			GenWDirectMass = genWDirectP4.M()
 			GenmTLepNu = mt_2(genLepP4,genNuP4)
 		
-		print ngenLepsAndLepsFromTau, ngenLeps + ngenTaus, ngenLepFromTau+ngenLeps
+		#print ngenLepsAndLepsFromTau, ngenLeps + ngenTaus, ngenLepFromTau+ngenLeps
 		assert ngenLepsAndLepsFromTau==ngenLepFromTau+ngenLeps
 		if ngenLeps + ngenTaus ==2: #looking at semileptonic events
 			IsDiLepEvent = True

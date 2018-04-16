@@ -4,10 +4,9 @@ import math, os
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 # for met object 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection,Object
-
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
-
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetSmearer import jetSmearer
+from RunIISummer16_Moriond17 import getXsec
 
 #################
 ### Cuts and WP
@@ -192,6 +191,14 @@ class susysinglelep(Module):
 		self.out.branch("bestMTopHad","F");
 		self.out.branch("bestMTopHadPt","F");   
        # self.out.branch("Jet_mhtCleaning", "b", lenVar="nJet")
+       
+       # Store the Xsec 
+		self.out.branch("xsec",  "F")
+		xsec = getXsec(inputFile.GetName())
+		print inputFile.GetName()
+		print xsec
+		self.out.fillBranch("xsec",xsec)
+       
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
         
@@ -573,7 +580,7 @@ class susysinglelep(Module):
 		########
 		### Jets
 		########
-		jets = [j for j in Jets ]
+		jets = [j for j in Jets if j.cleanmask() == True]
 		njet = len(jets)
 		# it's not needed for nanoAOD there is a module to do the job for you 
 		# Apply JEC up/down variations if needed (only MC!)
