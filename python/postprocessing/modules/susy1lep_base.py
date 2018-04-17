@@ -1,13 +1,16 @@
 import ROOT
 import math, os
+import array
+import operator
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 # for met object 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection,Object
-
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
-
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetSmearer import jetSmearer
+from RunIISummer16_Moriond17 import getXsec
+
+from ROOT import TLorentzVector, TVector2, std
 
 #################
 ### Cuts and WP
@@ -99,111 +102,7 @@ goodEl_lostHits = 0
 goodEl_sip3d = 4
 goodMu_sip3d = 4
 
-class susysinglelep(Module):
-    def __init__(self, isMC , isSig):#, muonSelection, electronSelection):
-        self.isMC = isMC
-        self.isSig = isSig
-        #self.muSel = muonSelection
-        #self.elSel = electronSelection
-        pass
-    def beginJob(self):
-        pass
-    def endJob(self):
-        pass
-    def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
-		self.out = wrappedOutputTree
-
-		self.out.branch("genWeight","F");
-		self.out.branch("isData","I");
-            ## leptons
-		self.out.branch("nLep","I");
-		self.out.branch("nVeto","I");
-		self.out.branch("nEl","I");
-		self.out.branch("nMu","I");
-		self.out.branch("nTightLeps", "I");
-		self.out.branch("nTightMu", "I");
-		self.out.branch("nTightEl", "I")
-			## selected == tight leps
-			# for indx
-		self.out.branch("tightLepsIdx","I",10,"nTightLeps");
-            #("tightLeps_DescFlag","I",10,"nTightLeps"),
-		self.out.branch("Lep_pdgId","F");
-		self.out.branch("Lep_pt","F");
-		self.out.branch("Lep_eta","F");
-		self.out.branch("Lep_phi","F");
-		self.out.branch("Lep_Idx","I");
-		self.out.branch("Lep_relIso","F");
-		self.out.branch("Lep_miniIso","F");
-		self.out.branch("Lep_hOverE","F");
-		self.out.branch("Selected","I"); # selected (tight) or anti-selected lepton
-            # second leading lepton
-		self.out.branch("Lep2_pt","F");
-		self.out.branch("Selected2","I");
-		    ## MET
-		self.out.branch("MET","F");
-		self.out.branch("LT","F");
-		self.out.branch("ST","F");
-		self.out.branch("MT","F");
-		self.out.branch("DeltaPhiLepW","F");
-		self.out.branch("dPhi","F");
-		self.out.branch("Lp","F");
-		self.out.branch("GendPhi","F");
-		self.out.branch("GenLT","F");
-		self.out.branch("GenMET","F");
-		 # no HF stuff
-		#"METNoHF", "LTNoHF", "dPhiNoHF",
-            ## jets
-		self.out.branch("HT","F");
-		#self.out.branch("HTphi","F");
-		self.out.branch("nJets","I");
-		self.out.branch("nBJet","I");
-		self.out.branch("nBJetDeep","I");
-		self.out.branch("nJets30","I");
-		self.out.branch("Jets30Idx","I",50,"nJets30");
-		self.out.branch("nBJets30","I");
-		self.out.branch("nJets30Clean","I");
-		self.out.branch("nJets40","I");
-		self.out.branch("nBJets40","I");
-		self.out.branch("htJet30j","F");
-		self.out.branch("htJet30ja","F");
-		self.out.branch("htJet40j","F");
-		self.out.branch("Jet1_pt","F");
-		self.out.branch("Jet2_pt","F");
-		 ## top tags
-		self.out.branch("nHighPtTopTag","I");
-		self.out.branch("nHighPtTopTagPlusTau23","I");
-            ## special Vars
-		self.out.branch("LSLjetptGT80","F"); # leading + subl. jet pt > 80
-		self.out.branch("isSR","I"); # is it Signal or Control region
-		self.out.branch("Mll","F"); #di-lepton mass
-		#self.out.branch("METfilters","I"); not needed for nanoAOD 
-            #Datasets
-		self.out.branch("PD_JetHT","F");
-		self.out.branch("PD_SingleEle","F");
-		self.out.branch("PD_SingleMu","F");
-		self.out.branch("PD_MET","F");
-		self.out.branch("isDPhiSignal","I");
-		self.out.branch("RA2_muJetFilter","I");
-		self.out.branch("Flag_fastSimCorridorJetCleaning","I");
-		self.out.branch("minMWjj","F");
-		self.out.branch("minMWjjPt","F");
-		self.out.branch("bestMWjj","F");
-		self.out.branch("bestMWjjPt","F");
-		self.out.branch("bestMTopHad","F");
-		self.out.branch("bestMTopHadPt","F");   
-       # self.out.branch("Jet_mhtCleaning", "b", lenVar="nJet")
-    def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
-        pass
-        
-	def met(self, met, isMC):
-        ## the MC has JER smearing applied which has output branch met_[pt/phi]_smeared which should be compared 
-        ## with data branch MET_[pt/phi]. This essentially aliases the two branches to one common variable.
-		if isMC:
-			return (met.pt_smeared,met.phi_smeared)
-		else:
-			return (met.pt,met.phi)
-
-    def checkEleMVA(lep,WP = 'Tight', era = "Spring16" ):
+def checkEleMVA(lep,WP = 'Tight', era = "Spring16" ):
 		# Eta dependent MVA ID check:
 		passID = False
 		
@@ -252,8 +151,143 @@ class susysinglelep(Module):
 		
 		return passID
 
-    def analyze(self, event):
-		"""process event, return True (go to next module) or False (fail, go to next event)"""
+
+def getPhysObjectArray(j): # https://github.com/HephySusySW/Workspace/blob/72X-master/RA4Analysis/python/mt2w.py
+    px = j.pt*math.cos(j.phi )
+    py = j.pt*math.sin(j.phi )
+    pz = j.pt*math.sinh(j.eta )
+    E = math.sqrt(px*px+py*py+pz*pz) #assuming massless particles...
+    return array.array('d', [E, px, py,pz])
+
+def mt_2(p4one, p4two):
+    return math.sqrt(2*p4one.Pt()*p4two.Pt()*(1-math.cos(p4one.Phi()-p4two.Phi())))
+
+def GetZfromM(vector1,vector2,mass):
+    MT = math.sqrt(2*vector1.Pt()*vector2.Pt()*(1-math.cos(vector2.DeltaPhi(vector1))))
+    if (MT<mass):
+        Met2D = TVector2(vector2.Px(),vector2.Py())
+        Lep2D = TVector2(vector1.Px(),vector1.Py())
+        A = mass*mass/2.+Met2D*Lep2D
+        Delta = vector1.E()*vector1.E()*(A*A-Met2D.Mod2()*Lep2D.Mod2())
+        MetZ1 = (A*vector1.Pz()+math.sqrt(Delta))/Lep2D.Mod2()
+        MetZ2 = (A*vector1.Pz()-math.sqrt(Delta))/Lep2D.Mod2()
+    else:
+        MetZ1 =vector1.Pz()*vector2.Pt()/vector1.Pt()
+        MetZ2 =vector1.Pz()*vector2.Pt()/vector1.Pt()
+    return [MT,MetZ1,MetZ2]
+
+def minValueForIdxList(values,idxlist):
+    cleanedValueList = [val for i,val in enumerate(values) if i in idxlist]
+    if len(cleanedValueList)>0: return min(cleanedValueList)
+    else: return -999
+#  print cleanedValueList, min(cleanedValueList)#d, key=d.get)
+
+
+class susysinglelep(Module):
+	def __init__(self, isMC , isSig):#, muonSelection, electronSelection):
+		self.isMC = isMC
+		self.isSig = isSig
+		pass
+	def beginJob(self):
+		pass
+	def endJob(self):
+		pass
+	def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
+		self.out = wrappedOutputTree
+		self.out.branch("isData","I");
+            ## leptons
+		self.out.branch("nLep","I");
+		self.out.branch("nVeto","I");
+		self.out.branch("nEl","I");
+		self.out.branch("nMu","I");
+		self.out.branch("nTightLeps", "I");
+		self.out.branch("nTightMu", "I");
+		self.out.branch("nTightEl", "I");
+		self.out.branch("tightLepsIdx","I",10,"nTightLeps");
+            #("tightLeps_DescFlag","I",10,"nTightLeps"),
+		self.out.branch("Lep_pdgId","F");
+		self.out.branch("Lep_pt","F");
+		self.out.branch("Lep_eta","F");
+		self.out.branch("Lep_phi","F");
+		self.out.branch("Lep_Idx","I");
+		self.out.branch("Lep_relIso","F");
+		self.out.branch("Lep_miniIso","F");
+		self.out.branch("Lep_hOverE","F");
+		self.out.branch("Selected","I"); # selected (tight) or anti-selected lepton	
+            # second leading lepton
+		self.out.branch("Lep2_pt","F");
+		self.out.branch("Selected2","I");
+		self.out.branch("MET","F");				
+		self.out.branch("LT","F");
+		self.out.branch("ST","F");
+		self.out.branch("MT","F");
+		self.out.branch("DeltaPhiLepW","F");
+		self.out.branch("dPhi","F");
+		self.out.branch("Lp","F");
+		self.out.branch("GendPhi","F");
+		self.out.branch("GenLT","F");
+		self.out.branch("GenMET","F");
+		 # no HF stuff
+		#"METNoHF", "LTNoHF", "dPhiNoHF",
+            ## jets	
+		self.out.branch("HT","F");
+		#self.out.branch("HTphi","F");
+		self.out.branch("nJets","I");
+		self.out.branch("nBJet","I");
+		self.out.branch("nBJetDeep","I");
+		self.out.branch("nJets30","I");
+		self.out.branch("Jets30Idx","I",50,"nJets30");
+		self.out.branch("nBJets30","I");
+		self.out.branch("nJets30Clean","I");
+		self.out.branch("nJets40","I");
+		self.out.branch("nBJets40","I");
+		self.out.branch("htJet30j","F");
+		self.out.branch("htJet30ja","F");
+		self.out.branch("htJet40j","F");
+		self.out.branch("Jet1_pt","F");
+		self.out.branch("Jet2_pt","F");           
+		 ## top tags
+		self.out.branch("nHighPtTopTag","I");
+		self.out.branch("nHighPtTopTagPlusTau23","I");
+            ## special Vars
+		self.out.branch("LSLjetptGT80","F"); # leading + subl. jet pt > 80
+		self.out.branch("isSR","I"); # is it Signal or Control region
+		self.out.branch("Mll","F"); #di-lepton mass
+		#self.out.branch("METfilters","I"); not needed for nanoAOD 
+            #Datasets
+		self.out.branch("PD_JetHT","F");
+		self.out.branch("PD_SingleEle","F");
+		self.out.branch("PD_SingleMu","F");
+		self.out.branch("PD_MET","F");
+		self.out.branch("isDPhiSignal","I");
+		self.out.branch("RA2_muJetFilter","I");
+		self.out.branch("Flag_fastSimCorridorJetCleaning","I");
+		self.out.branch("minMWjj","F");
+		self.out.branch("minMWjjPt","F");
+		self.out.branch("bestMWjj","F");
+		self.out.branch("bestMWjjPt","F");
+		self.out.branch("bestMTopHad","F");
+		self.out.branch("bestMTopHadPt","F");   
+       # self.out.branch("Jet_mhtCleaning", "b", lenVar="nJet")
+       
+       # Store the Xsec 
+		self.out.branch("xsec",  "F")
+		xsec = getXsec(inputFile.GetName())
+		print inputFile.GetName()
+		print xsec
+		self.out.fillBranch("xsec",xsec)				 
+	def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
+		pass
+	def met(self, met, isMC):
+        ## the MC has JER smearing applied which has output branch met_[pt/phi]_smeared which should be compared 
+        ## with data branch MET_[pt/phi]. This essentially aliases the two branches to one common variable.
+		if isMC:
+			return (met.pt_smeared,met.phi_smeared)
+		else:
+			return (met.pt,met.phi)
+	
+	def analyze(self, event):
+ 		"""process event, return True (go to next module) or False (fail, go to next event)"""
 		electrons = Collection(event, "Electron")
 		muons = Collection(event, "Muon")
 		Jets = Collection(event, "Jet")
@@ -573,7 +607,7 @@ class susysinglelep(Module):
 		########
 		### Jets
 		########
-		jets = [j for j in Jets ]
+		jets = [j for j in Jets if j.cleanmask == True]
 		njet = len(jets)
 		# it's not needed for nanoAOD there is a module to do the job for you 
 		# Apply JEC up/down variations if needed (only MC!)
@@ -845,13 +879,13 @@ class susysinglelep(Module):
 							self.out.fillBranch("bestMTopHad",bestMTopHad)
 							self.out.fillBranch("bestMTopHadPt",bestMTopHadPt)
 
+
+		
 		return True
+		
 
-
+# define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
 # define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
 susy1lepSIG = lambda : susysinglelep(True,True)#,
 susy1lepMC = lambda : susysinglelep(True,False)#,
-susy1lepdata = lambda : susysinglelep(False ,False)
-                            #lambda mu : mu.pt > 20 and mu.miniPFIso_all/mu.pt < 0.2,
-                            #lambda el : el.pt > 20 and el.miniPFIso_all/el.pt < 0.2 ) 
- 
+susy1lepdata = lambda : susysinglelep(False ,False) 
