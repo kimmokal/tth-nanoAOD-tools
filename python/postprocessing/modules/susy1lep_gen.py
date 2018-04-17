@@ -61,26 +61,27 @@ class genpartsusy(Module):
 		# for this: start from genLeps (status 23)
 		
 		for i_lep, genLep in enumerate(genLeps):
-			if genLep.status == 23 and abs(genLep[genPart.genPartIdxMother].pdgId) == 24: # genLep is outgoing and has W as mother
+			if genLep.status == 23 and abs(genParts[genLep.genPartIdxMother].pdgId) == 24: # genLep is outgoing and has W as mother
 				W_idx = genLep.genPartIdxMother
 				idx_genWs.append(W_idx)
 				idx_genLeps.append(i_lep)
 				for i_nu, genPart in enumerate(genParts):
 					if genPart.genPartIdxMother==W_idx and genPart.status == 23: # find W as mother
-						if abs(genPart[genPart.genPartIdxMother].pdgId) == 12 or abs(genPart[genPart.genPartIdxMother].pdgId) == 14 or abs(genPart[genPart.genPartIdxMother].pdgId) == 16: #check whether it is a neutrino
+						if abs(genParts[genPart.genPartIdxMother].pdgId) == 12 or abs(genParts[genPart.genPartIdxMother].pdgId) == 14 or abs(genParts[genPart.genPartIdxMother].pdgId) == 16: #check whether it is a neutrino
 							idx_genNus.append(i_nu)
 		
 		
 		if(len(idx_genLeps)>=1):
 			genLepP4 = genLeps[idx_genLeps[0]].p4()
-			genNuP4 = genParts[idx_genNus[0]].p4()
-			genWSumP4 = genLepP4 + genNuP4
-			genWDirectP4 = genParts[genLeps[idx_genLeps[0]].genPartIdxMother].p4()
-			GenDeltaPhiLepWSum = genLepP4.DeltaPhi(genWSumP4)
-			GenDeltaPhiLepWDirect = genLepP4.DeltaPhi(genWDirectP4)
-			GenWSumMass = genWSumP4.M()
-			GenWDirectMass = genWDirectP4.M()
-			GenmTLepNu = mt_2(genLepP4,genNuP4)
+			if ngenParts >=  idx_genNus:
+				genNuP4 = genParts[idx_genNus[0]].p4()
+				genWSumP4 = genLepP4 + genNuP4
+				genWDirectP4 = genParts[genLeps[idx_genLeps[0]].genPartIdxMother].p4()
+				GenDeltaPhiLepWSum = genLepP4.DeltaPhi(genWSumP4)
+				GenDeltaPhiLepWDirect = genLepP4.DeltaPhi(genWDirectP4)
+				GenWSumMass = genWSumP4.M()
+				GenWDirectMass = genWDirectP4.M()
+				GenmTLepNu = mt_2(genLepP4,genNuP4)
 		
 		#print ngenLepsAndLepsFromTau, ngenLeps + ngenTaus, ngenLepFromTau+ngenLeps
 		assert ngenLepsAndLepsFromTau==ngenLepFromTau+ngenLeps
