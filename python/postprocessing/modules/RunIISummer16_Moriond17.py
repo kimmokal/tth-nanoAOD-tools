@@ -71,4 +71,4 @@ def getXsec(sample):
     elif sample.find("SingleMuon")!=-1  or sample.find("SingleElectron") !=-1 or sample.find("JetHT") !=-1 or sample.find("MET") !=-1 or sample.find("MuonEG") !=-1 or sample.find("DoubleMuon") !=-1 or sample.find("DoubleEG") !=-1: return 1.
     else:
         print "Cross section not defined for this sample!"
-        return 0
+        return 0.0

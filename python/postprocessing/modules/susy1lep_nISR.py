@@ -22,9 +22,6 @@ def deltaPhi( p1, p2):
 	while res < -math.pi:
 		res += 2*math.pi
 	return res
-		
-
-
 
 class susy1lepnISR(Module):
     def __init__(self):

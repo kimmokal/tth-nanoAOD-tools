@@ -10,8 +10,9 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.jetSubstructureObservablesP
 ############################################### we need these modules as a starting #######################
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
 from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll
-from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import btagSF_csvv2, btagSF_deep
-from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight
+from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import btagSF_csvv2_2016, btagSF_cmva_2016, btagSF_csvv2_2017, btagSF_deep_2017
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight as puWeight_2016
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puAutoWeight as puWeight_2017
 
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import jetmetUncertainties2017 as jetmetUncertainties17
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import jetmetUncertainties2016 as jetmetUncertainties16
@@ -24,9 +25,9 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_TOP import susy1le
 # preliminarly --> correct the nJets 
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_nISR import susy_1l_nISR
 
-# it has  an issue --> posted to HN --> now it works again
-from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_gen import genpartsusymod
-# for Trig
+# it has  an issue --> posted to HN --> now it works 16April 2018
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_gen import susy_1l_gen
+# for Trig better to use Oleksii's for now 16April 2018
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_trig import trigsusysusymod
 
 ###### Oleksii

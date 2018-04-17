@@ -119,5 +119,5 @@ class genpartsusy(Module):
 
 
 # define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
-genpartsusymod = lambda : genpartsusy()#,
+susy_1l_gen = lambda : genpartsusy()#,
  
