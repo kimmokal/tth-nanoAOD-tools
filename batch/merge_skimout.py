@@ -50,7 +50,7 @@ if __name__ == '__main__':
 			if not f.IsZombie():
 				to_merge += ' '+str(rf)
 		print subdir+" is going to be merged"
-		os.system('haddnano.py '+outdire+'/'+subdir+'.root'+' '+str(to_merge))
+		os.system('hadd -f '+outdire+'/'+subdir+'.root'+' '+str(to_merge))
 		print subdir+" has been merged"
 	print 'merging done'
 

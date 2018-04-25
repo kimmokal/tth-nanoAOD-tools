@@ -108,6 +108,15 @@ if __name__ == '__main__':
 			ext1 = "ver2"
 			dirname = outdire+"/"+getdir[1]+extension+ext1
 			textname = getdir[1]+extension+ext1
+		elif "ext1" in getdir[2] : 
+			ext1 = "ext1"
+			dirname = outdire+"/"+getdir[1]+extension+ext1
+			textname = getdir[1]+extension+ext1
+		elif "ext2" in getdir[2] : 
+			ext1 = "ext2"
+			dirname = outdire+"/"+getdir[1]+extension+ext1
+			textname = getdir[1]+extension+ext1
+			
 		else :
 			dirname = outdire+"/"+getdir[1]+extension
 			textname = getdir[1]+extension
@@ -134,7 +143,7 @@ if __name__ == '__main__':
 			s1 = open(dirname+"/Condor"+str(i)+".submit").read()
 			#print textname
 			if ('Run2016C' or 'Run2016E' or 'Run2016G') in str(textname): # run C , E, G takes longer to analyzer 
-				s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509).replace('@time','60*60*10')
+				s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509).replace('@time','60*60*15')
 			else : 
 				s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509).replace('@time','60*60*5')
 			f1 = open(dirname+"/Condor"+str(i)+".submit", 'w')
