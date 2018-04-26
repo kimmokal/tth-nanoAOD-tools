@@ -56,7 +56,7 @@ def moduletorun(sample):
 		if era == 2017 : modu+="jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017"
 		if "TTJets" in str(sample) : modu+="susy_1l_nISR"
 	elif isMC and isSIG :
-		modu = "susy1lepSIG,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,puWeight,eventCountHistogram,susy1lepTOP,susy_1l_nISR,susy_1l_gen"#,xsec,genpartsusymod
+		modu = "susy1lepSIG,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,puWeight,eventCountHistogram,susy1lepTOP,susy_1l_Sig,susy_1l_gen"#,xsec,genpartsusymod
 		if era == 2016 : modu+="jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016"
 		if era == 2017 : modu+="jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017"
 	else : 

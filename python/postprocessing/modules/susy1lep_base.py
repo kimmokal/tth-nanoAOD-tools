@@ -891,41 +891,43 @@ class susysinglelep(Module):
 #####################################################################
 #####################################################################
 # isolated tracks after basic selection (((pt>5 && (abs(pdgId) == 11 || abs(pdgId) == 13)) || pt > 10) && (abs(pdgId) < 15 || abs(eta) < 2.5) && abs(dxy) < 0.2 && abs(dz) < 0.1 && ((pfIsolationDR03().chargedHadronIso < 5 && pt < 25) || pfIsolationDR03().chargedHadronIso/pt < 0.2)) and lepton veto
-		trks = [j for j in Collection(event,"IsoTrack","nIsoTrack")]
-		tp4 = ROOT.TLorentzVector(0,0,0,0)
-
-		# min dR between good lep and iso track 
-		minDR = 0.1
-		# MT2 cuts for hadronic and leptonic veto tracks
-		hadMT2cut = 60
-		lepMT2cut = 80
-		if (len(tightLeps)>=1) and len(trks)>=1:
-			for i,t in enumerate(trks):
-				# looking for opposite charged tracks
-				#if tightLeps[0].charge == t.charge: continue # not track charge is founded replace with the next copule of lines 
-				if t.isHighPurityTrack == False : continue 
-				#print t.miniPFRelIso_chg
-				# not track mass is founded 
-				tp4.SetPtEtaPhiM(t.pt,t.eta,t.phi,0.)
-				dR = tp4.DeltaR(tightLeps[0].p4())
-				if minDR>dR: continue
-				p1=tightLeps[0].p4()
-				p2=tp4
-				a=array.array('d', [ p1.M(), p1.Px(), p1.Py() ])                    
-				b=array.array('d', [ p2.M(), p2.Px(), p2.Py() ])                    
-				c=array.array('d', [ metp4.M(), metp4.Px(), metp4.Py() ])                    
-				mt2obj.set_momenta( a, b, c )
-				mt2obj.set_mn(0)
-				self.out.fillBranch("iso_MT2",mt2obj.get_mt2())
-				self.out.fillBranch("iso_pt", p2.Pt())
-				# cuts on MT2 as defined above
-				if abs(t.pdgId)>10 and abs(t.pdgId)<14:
-					self.out.fillBranch("iso_had", 0)  #leptonic
-					cut=lepMT2cut
-				else: 
-					self.out.fillBranch("iso_had", 1)  #hadronic track
-					cut=hadMT2cut
-				if mt2obj.get_mt2()<=cut: self.out.fillBranch("iso_Veto",True)
+		# First check is the event has the IsoTrack or not 
+		if hasattr(event, "nIsoTrack"):
+			trks = [j for j in Collection(event,"IsoTrack","nIsoTrack")]
+			tp4 = ROOT.TLorentzVector(0,0,0,0)
+			
+			# min dR between good lep and iso track 
+			minDR = 0.1
+			# MT2 cuts for hadronic and leptonic veto tracks
+			hadMT2cut = 60
+			lepMT2cut = 80
+			if (len(tightLeps)>=1) and len(trks)>=1:
+				for i,t in enumerate(trks):
+					# looking for opposite charged tracks
+					#if tightLeps[0].charge == t.charge: continue # not track charge is founded replace with the next copule of lines 
+					if t.isHighPurityTrack == False : continue 
+					#print t.miniPFRelIso_chg
+					# not track mass is founded 
+					tp4.SetPtEtaPhiM(t.pt,t.eta,t.phi,0.)
+					dR = tp4.DeltaR(tightLeps[0].p4())
+					if minDR>dR: continue
+					p1=tightLeps[0].p4()
+					p2=tp4
+					a=array.array('d', [ p1.M(), p1.Px(), p1.Py() ])                    
+					b=array.array('d', [ p2.M(), p2.Px(), p2.Py() ])                    
+					c=array.array('d', [ metp4.M(), metp4.Px(), metp4.Py() ])                    
+					mt2obj.set_momenta( a, b, c )
+					mt2obj.set_mn(0)
+					self.out.fillBranch("iso_MT2",mt2obj.get_mt2())
+					self.out.fillBranch("iso_pt", p2.Pt())
+					# cuts on MT2 as defined above
+					if abs(t.pdgId)>10 and abs(t.pdgId)<14:
+						self.out.fillBranch("iso_had", 0)  #leptonic
+						cut=lepMT2cut
+					else: 
+						self.out.fillBranch("iso_had", 1)  #hadronic track
+						cut=hadMT2cut
+					if mt2obj.get_mt2()<=cut: self.out.fillBranch("iso_Veto",True)
 		
 		return True
 		
