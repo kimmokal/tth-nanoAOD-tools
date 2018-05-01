@@ -14,7 +14,7 @@ import shutil
 ## to be changed by user 
 workarea = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src'
 exearea = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch'
-X509 = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch/x509up_u29118'
+X509 = "/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch/x509up_u29118"
 #X509name = 'x509up_u29118'
 ## to be kept 
 condTEMP = './templates/submit.condor'
@@ -52,12 +52,12 @@ def moduletorun(sample):
 		isSIG = True
 	if isMC and not isSIG : 
 		modu = "susy1lepMC,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,eventCountHistogram,susy1lepTOP,susy_1l_gen"#,xsec,genpartsusymod
-		if era == 2016 : modu+="jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016"
+		if era == 2016 : modu+="jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,lepSF"
 		if era == 2017 : modu+="jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017"
 		if "TTJets" in str(sample) : modu+="susy_1l_nISR"
 	elif isMC and isSIG :
 		modu = "susy1lepSIG,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,puWeight,eventCountHistogram,susy1lepTOP,susy_1l_Sig,susy_1l_gen"#,xsec,genpartsusymod
-		if era == 2016 : modu+="jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016"
+		if era == 2016 : modu+="jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,lepSF"
 		if era == 2017 : modu+="jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017"
 	else : 
 		modu = "susy1lepdata,susy_1l_Trigg,susy_1l_FiltersData,susy1lepTOP"
@@ -72,7 +72,7 @@ if __name__ == '__main__':
 	
 	outdire = args.out
 	
-	os.system('export X509_USER_PROXY='+X509)
+	os.system("export X509_USER_PROXY="+X509)
 	os.system('voms-proxy-init --voms cms --valid 60:00')
 	
 
@@ -143,9 +143,9 @@ if __name__ == '__main__':
 			s1 = open(dirname+"/Condor"+str(i)+".submit").read()
 			#print textname
 			if ('Run2016C' or 'Run2016E' or 'Run2016G') in str(textname): # run C , E, G takes longer to analyzer 
-				s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509).replace('@time','60*60*15')
+				s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509).replace('@time','60*60*24')
 			else : 
-				s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509).replace('@time','60*60*5')
+				s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509).replace('@time','60*60*24')
 			f1 = open(dirname+"/Condor"+str(i)+".submit", 'w')
 			f1.write(s1)
 			f1.close()
