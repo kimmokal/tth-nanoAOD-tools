@@ -47,6 +47,9 @@ def getXsec(sample):
   elif sample.find("ST_t-channel_top_4f_inclusiveDecays"   ) !=-1 : return 80.95        ;
   elif sample.find("ST_tW_antitop_5f_inclusiveDecays"      ) !=-1 : return 35.6         ;
   elif sample.find("ST_tW_top_5f_inclusiveDecays_"         ) !=-1 : return 35.6         ;
+  elif sample.find("SMS-T1tttt_mGluino-1200_mLSP-800"         ) !=-1 : return 0.04129   ;
+  elif sample.find("SMS-T1tttt_mGluino-1500_mLSP-100"         ) !=-1 : return 0.006889  ;
+  elif sample.find("SMS-T1tttt_mGluino-2000_mLSP-100"         ) !=-1 : return 0.0004488	;
   elif sample.find("SingleMuon")!=-1  or sample.find("SingleElectron") !=-1 or sample.find("JetHT") !=-1 : return 1.
   else:
 	  print "Cross section not defined for this sample!!"

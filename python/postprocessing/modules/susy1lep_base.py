@@ -198,7 +198,6 @@ class susysinglelep(Module):
 	def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
 		self.out = wrappedOutputTree
 		self.out.branch("isData","I");
-            ## leptons
 		self.out.branch("nLep","I");
 		self.out.branch("nVeto","I");
 		self.out.branch("nEl","I");
@@ -258,10 +257,21 @@ class susysinglelep(Module):
 		self.out.branch("Mll","F"); #di-lepton mass
 		#self.out.branch("METfilters","I"); not needed for nanoAOD 
             #Datasets
-		self.out.branch("PD_JetHT","F");
-		self.out.branch("PD_SingleEle","F");
-		self.out.branch("PD_SingleMu","F");
-		self.out.branch("PD_MET","F");
+
+		self.out.branch("PD_JetHT","O");
+		self.out.branch("PD_SingleEle","O");
+		self.out.branch("PD_SingleMu","O");
+		self.out.branch("PD_MET","O");
+		
+		if "JetHT" in str(inputFile.GetName()):
+			self.out.fillBranch("PD_JetHT",True)
+		if "SingleEle" in str(inputFile.GetName()):
+			self.out.fillBranch("PD_SingleEle",True)
+		if "_SingleMu" in str(inputFile.GetName()):
+			self.out.fillBranch("PD_SingleMu",True)
+		if "MET" in str(inputFile.GetName()):
+			self.out.fillBranch("PD_MET",True)
+					
 		self.out.branch("isDPhiSignal","I");
 		self.out.branch("RA2_muJetFilter","I");
 		self.out.branch("Flag_fastSimCorridorJetCleaning","I");
@@ -276,13 +286,14 @@ class susysinglelep(Module):
 		self.out.branch("iso_had","I");
 		self.out.branch("iso_pt","F");
 		self.out.branch("iso_MT2","F");
-		self.out.branch("iso_Veto","O");
+	#	self.out.branch("iso_Veto","O");
        # Store the Xsec 
 		self.out.branch("xsec",  "F")
-		xsec = getXsec(inputFile.GetName())
+		xsec = getXsec(str(inputFile.GetName()))
 		#print inputFile.GetName()
 		print xsec
-		self.out.fillBranch("xsec",xsec)				 
+		self.out.fillBranch("xsec",xsec)
+				
 	def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
 		pass
 	def met(self, met, isMC):
