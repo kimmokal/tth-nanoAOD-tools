@@ -263,15 +263,6 @@ class susysinglelep(Module):
 		self.out.branch("PD_SingleMu","O");
 		self.out.branch("PD_MET","O");
 		
-		if "JetHT" in str(inputFile.GetName()):
-			self.out.fillBranch("PD_JetHT",True)
-		if "SingleEle" in str(inputFile.GetName()):
-			self.out.fillBranch("PD_SingleEle",True)
-		if "_SingleMu" in str(inputFile.GetName()):
-			self.out.fillBranch("PD_SingleMu",True)
-		if "MET" in str(inputFile.GetName()):
-			self.out.fillBranch("PD_MET",True)
-					
 		self.out.branch("isDPhiSignal","I");
 		self.out.branch("RA2_muJetFilter","I");
 		self.out.branch("Flag_fastSimCorridorJetCleaning","I");
@@ -286,14 +277,14 @@ class susysinglelep(Module):
 		self.out.branch("iso_had","I");
 		self.out.branch("iso_pt","F");
 		self.out.branch("iso_MT2","F");
-	#	self.out.branch("iso_Veto","O");
+		self.out.branch("iso_Veto","O");
        # Store the Xsec 
-		self.out.branch("xsec",  "F")
-		xsec = getXsec(str(inputFile.GetName()))
-		#print inputFile.GetName()
-		print xsec
-		self.out.fillBranch("xsec",xsec)
-				
+		self.out.branch("Xsec",  "F");
+		self.xs = getXsec(inputFile.GetName())
+		self.filename = inputFile.GetName()
+		print inputFile.GetName()
+		print self.xs
+		
 	def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
 		pass
 	def met(self, met, isMC):
@@ -939,6 +930,21 @@ class susysinglelep(Module):
 						self.out.fillBranch("iso_had", 1)  #hadronic track
 						cut=hadMT2cut
 					if mt2obj.get_mt2()<=cut: self.out.fillBranch("iso_Veto",True)
+			
+		self.out.fillBranch("Xsec",self.xs)
+		if 'JetHT' in self.filename:
+			self.out.fillBranch("PD_JetHT",True)
+		else: self.out.fillBranch("PD_JetHT",False)
+		if 'SingleEle' in self.filename:
+			self.out.fillBranch("PD_SingleEle",True)
+		else : self.out.fillBranch("PD_SingleEle",False)
+		if 'SingleMu' in self.filename:
+			self.out.fillBranch("PD_SingleMu",True)
+		else : self.out.fillBranch("PD_SingleMu",False)
+		if 'MET' in self.filename:
+			self.out.fillBranch("PD_MET",True)
+		else : self.out.fillBranch("PD_MET",False)
+					
 		
 		return True
 		
