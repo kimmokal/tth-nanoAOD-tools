@@ -31,8 +31,10 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_nISR import susy_1
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_gen import susy_1l_gen
 # for Trig better to use Oleksii's for now 16April 2018 
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_trig import trigsusysusymod
+#lepton SF 
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_lepSF import susy_lepSF
 ###### Oleksii
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_triggers import susy_1l_Trigg
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_filters import susy_1l_FiltersMC, susy_1l_FiltersData
-###### temp 
-#from tthAnalysis.NanoAODTools.postprocessing.modules.new import susy1lepdata
+###### temporary only for some missing variables --> should be commented out as it already in the base module 
+from tthAnalysis.NanoAODTools.postprocessing.modules.new import ovtest
