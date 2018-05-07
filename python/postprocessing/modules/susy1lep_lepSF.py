@@ -174,8 +174,8 @@ class lepSFProducer(Module):
 		"""process event, return True (go to next module) or False (fail, go to next event)"""
 		muons = Collection(event, "Muon")
 		electrons = Collection(event, "Electron")
-		Elecs = [x for x in electrons if x.eta < 2.4 and x.cutBased == 4 and x.convVeto == True and x.pt > 10 and x.miniPFRelIso_all < 0.1]      
-		Mus = [x for x in muons if x.eta < 2.4 and  x.pt > 10 and x.mediumId >= 1 and x.miniPFRelIso_all < 0.2 and x.sip3d < 4 ]
+		Elecs = [x for x in electrons if x.eta < 2.4 and x.pt > 10 and x.miniPFRelIso_all < 0.4 and x.cutBased >= 1]      
+		Mus = [x for x in muons if x.eta < 2.4 and  x.pt > 10 and x.miniPFRelIso_all < 0.4]
 		goodLep = Elecs + Mus 
 		leps = [l for l in goodLep]
 		nlep = len(leps)

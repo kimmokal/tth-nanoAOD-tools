@@ -187,6 +187,8 @@ def saveCanvases(canvList, pdir = '', extraName = '', _batchMode = True):
 
     # make output file
     outName = cdir + 'plots_'+ extraName +'.root'
+    if os.path.exists(outName):
+		outName ='1_'+outName
     ofile = TFile(outName,'RECREATE')
 
     for canv in canvList:
@@ -199,7 +201,9 @@ def saveCanvases(canvList, pdir = '', extraName = '', _batchMode = True):
             cname = cdir + cname+ suffix + ext
             # remove special symbols
             cname = cname.replace('||','or')
-            canv.SaveAs(cname)
+            if os.path.exists(cname):
+				canv.SaveAs("1_"+cname)
+            else : canv.SaveAs(cname)
         canv.Write()
 
     '''
