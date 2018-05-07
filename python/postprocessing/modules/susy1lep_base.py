@@ -616,7 +616,7 @@ class susysinglelep(Module):
 		########
 		### Jets
 		########
-		jets = [j for j in Jets if j.cleanmask == True]
+		jets = [j for j in Jets if j.pt >= 20 ]
 		njet = len(jets)
 		# it's not needed for nanoAOD there is a module to do the job for you 
 		# Apply JEC up/down variations if needed (only MC!)

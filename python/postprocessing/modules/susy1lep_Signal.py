@@ -164,7 +164,7 @@ class susy1lepSig(Module):
 			print 'Xsec not found for mGo', mGo	
 		nISR = 0
 		Jets = Collection(event, "Jet")
-		jets = [j for j in Jets if j.cleanmask == True]
+		jets = [j for j in Jets if j.pt > 20 ]
 		genpart = Collection(event, "GenPart")
 		genParts = [l for l in genpart]
 		# get the particles when they have a mother ---> getting the daughters only 

@@ -41,7 +41,7 @@ class susy1lepnISR(Module):
     def analyze(self, event):
 		"""process event, return True (go to next module) or False (fail, go to next event)"""
 		Jets = Collection(event, "Jet")
-		jets = [j for j in Jets if j.cleanmask == True]
+		jets = [j for j in Jets if j.pt >= 20]
 		genpart = Collection(event, "GenPart")
 		genParts = [l for l in genpart]
 		# get the particles when they have a mother ---> getting the daughters only 
