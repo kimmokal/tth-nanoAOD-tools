@@ -139,25 +139,22 @@ if __name__ == '__main__':
 		logsdir = dirname+"/logs"
 		os.makedirs(logsdir)
 		for f in flist: 
-			os.system("cp "+condTEMP+" "+dirname+"/Condor"+str(i)+".submit")
-			os.system("cp "+wrapTEMP+" "+dirname+"/Warp"+str(i)+".sh")		
-			s1 = open(dirname+"/Condor"+str(i)+".submit").read()
+			os.system("cp "+condTEMP+" "+dirname+"/Condor"+textname+str(i)+".submit")
+			os.system("cp "+wrapTEMP+" "+dirname+"/Warp"+textname+str(i)+".sh")		
+			s1 = open(dirname+"/Condor"+textname+str(i)+".submit").read()
 			#print textname
-			if ('Run2016C' or 'Run2016E' or 'Run2016G') in str(textname): # run C , E, G takes longer to analyzer 
-				s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509).replace('@time','60*60*48')
-			else : 
-				s1 = s1.replace('@EXESH', dirname+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509).replace('@time','60*60*48')
-			f1 = open(dirname+"/Condor"+str(i)+".submit", 'w')
+			s1 = s1.replace('@EXESH', dirname+"/Warp"+textname+str(i)+".sh").replace('@LOGS',logsdir).replace('@X509',X509).replace('@time','60*60*48')
+			f1 = open(dirname+"/Condor"+textname+str(i)+".submit", 'w')
 			f1.write(s1)
 			f1.close()
-			s2 = open(dirname+"/Warp"+str(i)+".sh").read()
+			s2 = open(dirname+"/Warp"+textname+str(i)+".sh").read()
 			s2 = s2.replace('@WORKDIR',workarea).replace('@EXEDIR',exearea).replace('@MODULES',modulelist).replace('@OUTDIR',dirname).replace('@INPUTFILE',f).replace('@X509',X509)
-			f2 = open(dirname+"/Warp"+str(i)+".sh", 'w')
+			f2 = open(dirname+"/Warp"+textname+str(i)+".sh", 'w')
 			f2.write(s2)
 			f2.close()
 			file = open('submit_all_to_batch_HTC.sh','a')
 			file.write("\n")
-			file.write("condor_submit "+dirname+"/Condor"+str(i)+".submit")
+			file.write("condor_submit "+dirname+"/Condor"+textname+str(i)+".submit")
 			file.close() 
 		
 			i+=1
