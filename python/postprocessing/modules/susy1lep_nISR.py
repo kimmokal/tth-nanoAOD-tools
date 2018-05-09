@@ -45,33 +45,39 @@ class susy1lepnISR(Module):
 		genpart = Collection(event, "GenPart")
 		genParts = [l for l in genpart]
 		# get the particles when they have a mother ---> getting the daughters only 
-		daughters = [l for l in genpart if l.genPartIdxMother >= 0 ]
-		nIsr = 0
+		daughters = [l for l in genpart if l.genPartIdxMother>= 0 ]
+		event.nIsr = 0
 		for jet in jets:
 			if jet.pt <30.0: continue
 			if abs(jet.eta )>2.4: continue
 			matched = False
 			
-			for mc in genParts:	
+			for i,mc in enumerate(genParts):
+				# if it's matched doesn't make sence to correct it
 				if matched: break
+				# check if it's quark from top or not
 				if (mc.status!=23 or abs(mc.pdgId)>5): continue
 				momid = abs(genParts[mc.genPartIdxMother].pdgId)
 				if not (momid==6 or momid==23 or momid==24 or momid==25 or momid>1e6): continue
-					#check against daughter in case of hard initial splitting
-				for idau in range(len(daughters)) :#(mc.numberOfDaughters()):
-					dR = math.sqrt(deltaR2(jet.eta,jet.phi, daughters[idau].eta,daughters[idau].phi))
-					if dR<0.3:
-						matched = True
-						break
+				for idau in range(len(daughters)) :
+					# look for the products of the jet and match jet with gen daughters of the quark 
+					if i == idau:
+						dR = math.sqrt(deltaR2(jet.eta,jet.phi, daughters[idau].eta,daughters[idau].phi))
+						if dR<0.3:
+							# if matched escape
+							matched = True
+							break
+			# if not matched correct it 
 			if not matched:
-				nIsr+=1
-		self.out.fillBranch("nIsr",nIsr)
+				event.nIsr+=1
+		# fill the output with nisr
+		self.out.fillBranch("nIsr",event.nIsr)
 		nISRweight = 1
 		ISRweights = { 0: 1, 1 : 0.920, 2 : 0.821, 3 : 0.715, 4 : 0.662, 5 : 0.561, 6 : 0.511}
 		ISRweightssyst = { 0: 0.0, 1 : 0.040, 2 : 0.090, 3 : 0.143, 4 : 0.169, 5 : 0.219, 6 : 0.244}
 		#if 'TTJets' in inputFile.GetName() or 'T1tttt' in inputFile.GetName():
-		nISRforWeights = int(nIsr)
-		if nIsr > 6:
+		nISRforWeights = int(event.nIsr)
+		if event.nIsr > 6:
 			nISRforWeights = 6
 		
 		C_ISR = 1.090
