@@ -14,6 +14,6 @@ cd ${exedir}
 #export LD_LIBRARY_PATH=$PWD/lib:$LD_LIBRARY_PATH
 export X509_USER_PROXY=@X509
 voms-proxy-info -all
-nano_postproc.py -I tthAnalysis.NanoAODTools.postprocessing.tthModules @MODULES @OUTDIR @INPUTFILE
+nano_postproc.py -I tthAnalysis.NanoAODTools.postprocessing.tthModules @MODULES @OUTDIR @INPUTFILE -b $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/keep_or_drop.txt
 
 

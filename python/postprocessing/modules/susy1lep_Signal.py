@@ -169,7 +169,7 @@ class susy1lepSig(Module):
 		genParts = [l for l in genpart]
 		# get the particles when they have a mother ---> getting the daughters only 
 		daughters = [l for l in genpart if l.genPartIdxMother >= 0 ]
-		nIsr = 0
+		event.nIsr = 0
 		for jet in jets:
 			if jet.pt <30.0: continue
 			if abs(jet.eta )>2.4: continue
@@ -198,8 +198,8 @@ class susy1lepSig(Module):
 		nISRweight = 1
 		ISRweights = { 0: 1, 1 : 0.920, 2 : 0.821, 3 : 0.715, 4 : 0.662, 5 : 0.561, 6 : 0.511}
 		ISRweightssyst = { 0: 0.0, 1 : 0.040, 2 : 0.090, 3 : 0.143, 4 : 0.169, 5 : 0.219, 6 : 0.244}
-		nISRforWeights = int(nIsr)
-		if nIsr > 6:
+		nISRforWeights = int(event.nIsr)
+		if event.nIsr > 6:
 			nISRforWeights = 6
 			
 			
