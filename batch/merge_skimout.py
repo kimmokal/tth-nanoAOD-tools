@@ -56,6 +56,9 @@ if __name__ == '__main__':
 		to_merge=''
 		for rf in rootfiles:
 			f = TFile(rf,'READ')
+			if not f.Get("Events"): 
+				print "corrupted file check if you want : ",f 
+				continue
 			if not f.IsZombie():
 				to_merge += ' '+str(rf)
 		print subdir+" is going to be merged"
