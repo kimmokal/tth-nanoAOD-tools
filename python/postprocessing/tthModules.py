@@ -4,7 +4,6 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer i
 from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog
 from tthAnalysis.NanoAODTools.postprocessing.modules.absIsoProducer import absIso
 
-
 from tthAnalysis.NanoAODTools.postprocessing.modules.jetSubstructureObservablesProducerHTTv2 import jetSubstructureObservablesHTTv2
 
 ############################################### we need these modules as a starting #######################
@@ -26,7 +25,8 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1l
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_TOP import susy1lepTOP
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_Signal import susy_1l_Sig
 #correct the nJets 
-from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_nISR import susy_1l_nISR
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_nISR import susy_1l_nISR16
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_nISR import susy_1l_nISR17
 # it has  an issue --> posted to HN --> now it works 16April 2018 --> Fixed 
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_gen import susy_1l_gen
 # for Trig better to use Oleksii's for now 16April 2018 
@@ -36,5 +36,3 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_lepSF import susy_
 ###### Oleksii
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_triggers import susy_1l_Trigg
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_filters import susy_1l_FiltersMC, susy_1l_FiltersData
-###### temporary only for some missing variables --> should be commented out as it already in the base module 
-from tthAnalysis.NanoAODTools.postprocessing.modules.new import ovtest
