@@ -1,14 +1,14 @@
 from tthAnalysis.NanoAODTools.postprocessing.modules.genParticleProducer import genAll
-from tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer import lepJetVarBTagAll
+from tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer import *
 from tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer import genHiggsDecayMode
-from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog
+from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog_2016, tauIDLog_2017
 from tthAnalysis.NanoAODTools.postprocessing.modules.absIsoProducer import absIso
 
 from tthAnalysis.NanoAODTools.postprocessing.modules.jetSubstructureObservablesProducerHTTv2 import jetSubstructureObservablesHTTv2
 
 ############################################### we need these modules as a starting #######################
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
-from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll
+from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll_2016, countHistogramAll_2017
 from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import btagSF_csvv2_2016, btagSF_cmva_2016, btagSF_csvv2_2017, btagSF_deep_2017
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight as puWeight_2016
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puAutoWeight as puWeight_2017
@@ -23,7 +23,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1l
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepSIG
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepMC
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_TOP import susy1lepTOP
-from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_Signal import susy_1l_Sig
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_Signal import susy_1l_Sig16 ,susy_1l_Sig17
 #correct the nJets 
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_nISR import susy_1l_nISR16
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_nISR import susy_1l_nISR17
