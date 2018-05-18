@@ -51,14 +51,17 @@ def moduletorun(sample):
 	if "/SMS-T1tttt" in sample:
 		isSIG = True
 	if isMC and not isSIG : 
-		modu = "susy1lepMC,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,eventCountHistogram,susy1lepTOP,susy_1l_gen"#,xsec,genpartsusymod
-		if era == 2016 : modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_lepSF"
-		if era == 2017 : modu+=",jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017"
-		if "TTJets" in str(sample) : modu+=",susy_1l_nISR"
+		modu = "susy1lepMC,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,susy1lepTOP,susy_1l_gen"#,xsec,genpartsusymod
+		if era == 2016 : 
+			modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_lepSF,countHistogramAll_2016"
+		if era == 2017 :
+			modu+=",jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,countHistogramAll_2017"
+		if "TTJets" in str(sample) and era == 2016: modu+=",susy_1l_nISR16"
+		if "TTJets" in str(sample) and era == 2017: modu+=",susy_1l_nISR17"
 	elif isMC and isSIG :
-		modu = "susy1lepSIG,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,puWeight,eventCountHistogram,susy1lepTOP,susy_1l_Sig,susy_1l_gen"#,xsec,genpartsusymod
-		if era == 2016 : modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_lepSF"
-		if era == 2017 : modu+=",jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017"
+		modu = "susy1lepSIG,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,puWeight,susy1lepTOP,susy_1l_gen"#,xsec,genpartsusymod
+		if era == 2016 : modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_lepSF,susy_1l_Sig16,countHistogramAll_2016"
+		if era == 2017 : modu+=",jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,susy_lepSF,susy_1l_Sig17,countHistogramAll_2017"
 	else : 
 		modu = "susy1lepdata,susy_1l_Trigg,susy_1l_FiltersData,susy1lepTOP"
 	return modu
@@ -138,7 +141,9 @@ if __name__ == '__main__':
 		i = 0 
 		logsdir = dirname+"/logs"
 		os.makedirs(logsdir)
-		for f in flist: 
+		for f in flist:
+			infile2 = f.split("/")
+			f2 = infile2[-1].replace(".root","_Skim.root") 
 			os.system("cp "+condTEMP+" "+dirname+"/Condor"+textname+str(i)+".submit")
 			os.system("cp "+wrapTEMP+" "+dirname+"/Warp"+textname+str(i)+".sh")		
 			s1 = open(dirname+"/Condor"+textname+str(i)+".submit").read()
@@ -148,7 +153,7 @@ if __name__ == '__main__':
 			f1.write(s1)
 			f1.close()
 			s2 = open(dirname+"/Warp"+textname+str(i)+".sh").read()
-			s2 = s2.replace('@WORKDIR',workarea).replace('@EXEDIR',exearea).replace('@MODULES',modulelist).replace('@OUTDIR',dirname).replace('@INPUTFILE',f).replace('@X509',X509)
+			s2 = s2.replace('@WORKDIR',workarea).replace('@EXEDIR',exearea).replace('@MODULES',modulelist).replace('@OUTDIR',dirname).replace('@INPUTFILE',f).replace('@X509',X509).replace("@STEP1",f2)
 			f2 = open(dirname+"/Warp"+textname+str(i)+".sh", 'w')
 			f2.write(s2)
 			f2.close()
@@ -156,7 +161,6 @@ if __name__ == '__main__':
 			file.write("\n")
 			file.write("condor_submit "+dirname+"/Condor"+textname+str(i)+".submit")
 			file.close() 
-		
 			i+=1
 	os.system('chmod a+x submit_all_to_batch_HTC.sh')
 	print 'submit_all_to_batch_HTC.sh Created for you - you can run it now with ./'
