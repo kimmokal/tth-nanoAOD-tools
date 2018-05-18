@@ -82,8 +82,10 @@ def loadSUSYparams():
 	return 1
 
 class susy1lepSig(Module):
-    def __init__(self,isScan):
+    def __init__(self,isScan,ICHEP16 , Mar17):
 		self.isScan = isScan 
+		self.ICHEP16 = ICHEP16
+		self.Mar17 = Mar17
 		self.susyParticles = {
 			100001 : 'Squark',
 			(1000000 + 21) : 'Gluino',
@@ -169,12 +171,12 @@ class susy1lepSig(Module):
 		genParts = [l for l in genpart]
 		# get the particles when they have a mother ---> getting the daughters only 
 		daughters = [l for l in genpart if l.genPartIdxMother >= 0 ]
+		daughters = [l for l in genpart if l.genPartIdxMother>= 0 ]
 		event.nIsr = 0
 		for jet in jets:
 			if jet.pt <30.0: continue
 			if abs(jet.eta )>2.4: continue
 			matched = False
-			
 			for i,mc in enumerate(genParts):
 				# if it's matched doesn't make sence to correct it
 				if matched: break
@@ -184,7 +186,7 @@ class susy1lepSig(Module):
 				if not (momid==6 or momid==23 or momid==24 or momid==25 or momid>1e6): continue
 				for idau in range(len(daughters)) :
 					# look for the products of the jet and match jet with gen daughters of the quark 
-					if i == idau:
+					if i == daughters[idau].genPartIdxMother:
 						dR = math.sqrt(deltaR2(jet.eta,jet.phi, daughters[idau].eta,daughters[idau].phi))
 						if dR<0.3:
 							# if matched escape
@@ -196,24 +198,33 @@ class susy1lepSig(Module):
 		# fill the output with nisr
 		self.out.fillBranch("nIsr",event.nIsr)
 		nISRweight = 1
-		ISRweights = { 0: 1, 1 : 0.920, 2 : 0.821, 3 : 0.715, 4 : 0.662, 5 : 0.561, 6 : 0.511}
-		ISRweightssyst = { 0: 0.0, 1 : 0.040, 2 : 0.090, 3 : 0.143, 4 : 0.169, 5 : 0.219, 6 : 0.244}
+		#https://indico.cern.ch/event/592621/contributions/2398559/attachments/1383909/2105089/16-12-05_ana_manuelf_isr.pdf
+		ISRweights_Mar17 = { 0: 1, 1 : 0.920, 2 : 0.821, 3 : 0.715, 4 : 0.662, 5 : 0.561, 6 : 0.511}
+		ISRweights_ICHEP16 = { 0: 1, 1 : 0.882, 2 : 0.792, 3 : 0.702, 4 : 0.648, 5 : 0.601, 6 : 0.515}
+		ISRweightssyst_Mar17 = { 0: 0.0, 1 : 0.040, 2 : 0.090, 3 : 0.143, 4 : 0.169, 5 : 0.219, 6 : 0.244}
+		ISRweightssyst_ICHEP16 = { 0: 0.0, 1 : 0.059, 2 : 0.104, 3 : 0.149, 4 : 0.176, 5 : 0.199, 6 : 0.242}
+		
+		if self.ICHEP16 == True and self.Mar17 == False:
+			ISRweights = ISRweights_ICHEP16
+			ISRweightssyst = ISRweightssyst_ICHEP16
+			
+		elif self.ICHEP16 == False and self.Mar17 == True: 
+			ISRweights = ISRweights_Mar17
+			ISRweightssyst = ISRweightssyst_Mar17
+			
 		nISRforWeights = int(event.nIsr)
 		if event.nIsr > 6:
 			nISRforWeights = 6
-			
-			
-		C_ISR = float(C_ISRweightsSusy[(mGo,mLSP)][0])
-		C_ISR_up = float(C_ISRweightsSusy[(mGo,mLSP)][1])
-		C_ISR_down = float(C_ISRweightsSusy[(mGo,mLSP)][2])
-		
+		C_ISR = 1.090
+		C_ISR_up   = 1.043
+		C_ISR_down = 1.141
 		nISRweight = C_ISR * ISRweights[nISRforWeights]
 		nISRweightsyst_up   =  C_ISR_up   * (ISRweights[nISRforWeights] + ISRweightssyst[nISRforWeights])
 		nISRweightsyst_down =  C_ISR_down * (ISRweights[nISRforWeights] - ISRweightssyst[nISRforWeights])
 		
 		self.out.fillBranch("nISRweight",nISRweight)
-		self.out.fillBranch("nISRweightsyst_up",nISRweightsyst_up)
-		self.out.fillBranch("nISRweightsyst_down",nISRweightsyst_down)		
+		self.out.fillBranch("nISRttweightsyst_up",nISRweightsyst_up)
+		self.out.fillBranch("nISRttweightsyst_down",nISRweightsyst_down)
 		##############
 		if (mGo,mLSP) in cntsSusy:
 			#ret['totalNgen'] = cntsSusy[(mGo,mLSP)][0] # merged scan: 93743963
@@ -230,5 +241,5 @@ class susy1lepSig(Module):
         
 
 # define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
-susy_1l_Sig  = lambda : susy1lepSig(False)
-
+susy_1l_Sig16  = lambda : susy1lepSig(False,True,False)
+susy_1l_Sig17  = lambda : susy1lepSig(False,False,True)
