@@ -9,6 +9,8 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collect
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetSmearer import jetSmearer
 from RunIISummer16_Moriond17 import getXsec
+from PhysicsTools.NanoAODTools.postprocessing.tools import matchObjectCollection, matchObjectCollectionMultiple
+
 
 from ROOT import TLorentzVector, TVector2, std
 
@@ -26,14 +28,7 @@ eleEta = 2.4
 ###########
 # Jets
 ###########
-
-corrJEC = "central" # can be "central","up","down"
-JECAllowedValues = ["central","up","down"]
-assert any(val==corrJEC for val in JECAllowedValues)
-
-smearJER = "None"# can be "None","central","up","down"
-JERAllowedValues = ["None","central","up","down"]
-assert any(val==smearJER for val in JERAllowedValues)
+smearJER = True
 
 btag_LooseWP = 0.5426
 btag_MediumWP = 0.8484
@@ -187,13 +182,21 @@ def minValueForIdxList(values,idxlist):
 
 
 class susysinglelep(Module):
-	def __init__(self, isMC , isSig):#, muonSelection, electronSelection):
+	def __init__(self, isMC , isSig):#, HTFilter, LTFilter):#, muonSelection, electronSelection):
 		self.isMC = isMC
-		self.isSig = isSig
+		self.isSig = isSig		
+		#self.HTFilt = HTFilter
+		#self.LTFilt = LTFilter
+		# smear jet pT to account for measured difference in JER between data and simulation.
+		self.jerInputFileName = "Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt"
+		self.jerUncertaintyInputFileName = "Spring16_25nsV10_MC_SF_AK4PFchs.txt"
+		self.jetSmearer = jetSmearer("Summer16_23Sep2016V4_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
 		pass
 	def beginJob(self):
+		self.jetSmearer.beginJob()
 		pass
 	def endJob(self):
+		self.jetSmearer.endJob()
 		pass
 	def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
 		self.out = wrappedOutputTree
@@ -232,6 +235,8 @@ class susysinglelep(Module):
 		 # no HF stuff
 		#"METNoHF", "LTNoHF", "dPhiNoHF",
             ## jets	
+		self.out.branch("ST1","F");
+		self.out.branch("HT1","F");    
 		self.out.branch("HT","F");
 		#self.out.branch("HTphi","F");
 		self.out.branch("nJets","I");
@@ -303,12 +308,19 @@ class susysinglelep(Module):
 		met = Object(event, "MET")
 		genmet = Object(event, "GenMET")
 		# for all leptons (veto or tight)
-		Elecs = [x for x in electrons if x.eta < 2.4 and x.pt > 10 and x.miniPFRelIso_all < 0.4 and x.cutBased >= 1]      
-		Mus = [x for x in muons if x.eta < 2.4 and  x.pt > 10 and x.miniPFRelIso_all < 0.4 ]
+		Elecs = [x for x in electrons if abs(x.eta) < 2.4 and x.pt > 10 and x.miniPFRelIso_all < 0.4 and x.cutBased >= 1]      
+		Mus = [x for x in muons if abs(x.eta) < 2.4 and  x.pt > 10 and x.miniPFRelIso_all < 0.4 ]
 		goodLep = Elecs + Mus 
 		
 		leps = [l for l in goodLep]
 		nlep = len(leps)
+		
+		# adding the ST HT filter 
+		if nlep > 0:
+			ST1 = leps[0].pt + met.pt 
+			self.out.fillBranch("ST1",ST1)
+		HT1 = sum([j.pt for j in Jets if (j.pt > 30 and abs(j.eta)<2.4)])
+		self.out.fillBranch("HT1",HT1)
         ### LEPTONS
 		Selected = False
 		if self.isMC == False and self.isSig == False: self.out.fillBranch("isData",1)
@@ -616,22 +628,21 @@ class susysinglelep(Module):
 		########
 		### Jets
 		########
+		Jets = Collection(event, "Jet")
+		
+		# match reconstructed jets to generator level ones
+		# (needed to evaluate JER scale factors and uncertainties)
 		jets = [j for j in Jets if j.pt >= 20 ]
 		njet = len(jets)
-		# it's not needed for nanoAOD there is a module to do the job for you 
-		# Apply JEC up/down variations if needed (only MC!)
-		'''if self.isMC == True:
-			if corrJEC == "central":
-				pass # don't do anything
-				#for jet in jets: jet.pt = jet.rawPt * jet.corr
-			elif corrJEC == "up":
-				for jet in jets: jet.pt = jet.rawPt * jet.corr_JECUp
-			elif corrJEC == "down":
-				for jet in jets: jet.pt = jet.rawPt * jet.corr_JECDown
-			else:
-				pass
-			if smearJER!= "None":
-				for jet in jets: jet.pt = returnJERSmearedPt(jet.pt,abs(jet.eta),jet.mcPt,smearJER)'''
+		if self.isMC == True or self.isMC == True:
+			rho = getattr(event,"fixedGridRhoFastjetAll")
+			genJets = Collection(event, "GenJet" )
+			pairs = matchObjectCollection(Jets, genJets)
+			for jet in jets:
+				genJet = pairs[jet]
+				if smearJER==True :
+					(jet_pt_jerNomVal, jet_pt_jerUpVal, jet_pt_jerDownVal) = self.jetSmearer.getSmearValsPt(jet, genJet, rho)
+					jet.pt = jet_pt_jerNomVal * jet.pt
 		
 		centralJet30 = []; centralJet30idx = []
 		centralJet40 = []
