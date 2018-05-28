@@ -172,15 +172,21 @@ class lepSFProducer(Module):
 		pass
 	def analyze(self, event):
 		"""process event, return True (go to next module) or False (fail, go to next event)"""
-		muons = Collection(event, "Muon")
-		electrons = Collection(event, "Electron")
-		Elecs = [x for x in electrons if x.eta < 2.4 and x.pt > 10 and x.miniPFRelIso_all < 0.4 and x.cutBased >= 1]      
-		Mus = [x for x in muons if x.eta < 2.4 and  x.pt > 10 and x.miniPFRelIso_all < 0.4]
-		goodLep = Elecs + Mus 
-		leps = [l for l in goodLep]
-		nlep = len(leps)
-		
-		
+goodLep = []
+		Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
+		Mus = [x for x in muons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.miniPFRelIso_all < 0.4  ]
+		goodLep = [i for i in itertools.chain(Mus, Elecs)]
+		# Clean good leptons and otherleptons 
+		for Mu in goodLep :
+			if abs(Mu.pdgId) == 13 :
+				for El in goodLep :
+					if abs(El.pdgId) == 11 : 
+						if Mu.p4().DeltaR(El.p4()) < 0.05 :
+							#print "overlap fonded remove Electron"
+							goodLep.remove(El)
+				
+		leps = goodLep 
+		nlep = len(leps)		
         # selected good leptons
 		selectedTightLeps = []
 		for idx,lep in enumerate(leps):
@@ -222,10 +228,10 @@ class lepSFProducer(Module):
 					# ELE CutBased ID
 					eidCB = lep.cutBased
 			
-					passTightID = (eidCB == 4 and lep.convVeto)
-					passMediumID = (eidCB >= 3 and lep.convVeto)
+					passTightID = (eidCB == 4 )#and lep.convVeto)
+					passMediumID = (eidCB >= 3 )#and lep.convVeto)
 					#passLooseID = (eidCB >= 2)
-					passVetoID = (eidCB >= 1 and lep.convVeto)
+					passVetoID = (eidCB >= 1)# and lep.convVeto)
 			
 				elif eleID == 'MVA':
 					# ELE MVA ID

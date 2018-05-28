@@ -11,9 +11,8 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetSmearer import jetS
 from RunIISummer16_Moriond17 import getXsec
 from PhysicsTools.NanoAODTools.postprocessing.tools import matchObjectCollection, matchObjectCollectionMultiple
 
-
+import itertools
 from ROOT import TLorentzVector, TVector2, std
-
 mt2obj = ROOT.heppy.Davismt2.Davismt2()
 
 
@@ -308,13 +307,32 @@ class susysinglelep(Module):
 		met = Object(event, "MET")
 		genmet = Object(event, "GenMET")
 		# for all leptons (veto or tight)
-		Elecs = [x for x in electrons if abs(x.eta) < 2.4 and x.pt > 10 and x.miniPFRelIso_all < 0.4 and x.cutBased >= 1]      
-		Mus = [x for x in muons if abs(x.eta) < 2.4 and  x.pt > 10 and x.miniPFRelIso_all < 0.4 ]
-		goodLep = Elecs + Mus 
-		
-		leps = [l for l in goodLep]
+		goodLep = []
+		Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
+		Mus = [x for x in muons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.miniPFRelIso_all < 0.4  ]
+		Elec_Other = [x for x in electrons if x not in set(Elecs) and abs(x.eta) < 2.4 if x.cutBased>=1]
+		Mus_Other = [x for x in muons if  x not in set(Mus) and abs(x.eta) < 2.4 ]
+		goodLep = [i for i in itertools.chain(Mus, Elecs)]
+		LepOther = [i for i in itertools.chain(Mus_Other, Elec_Other)]
+		# Clean good leptons and otherleptons 
+		for Mu in goodLep :
+			if abs(Mu.pdgId) == 13 :
+				for El in goodLep :
+					if abs(El.pdgId) == 11 : 
+						if Mu.p4().DeltaR(El.p4()) < 0.05 :
+							#print "overlap fonded remove Electron"
+							goodLep.remove(El)
+		for Mu in LepOther :
+			if abs(Mu.pdgId) == 13 :
+				for El in LepOther :
+					if abs(El.pdgId) == 11 : 
+						if Mu.p4().DeltaR(El.p4()) < 0.05 :
+							#print "overlap fonded remove Electron"
+							LepOther.remove(El)
+				
+		#LepOther = goodLep
+		leps = goodLep 
 		nlep = len(leps)
-		
 		# adding the ST HT filter 
 		if nlep > 0:
 			ST1 = leps[0].pt + met.pt 
@@ -337,7 +355,6 @@ class susysinglelep(Module):
 		for idx,lep in enumerate(leps):
 			# for acceptance check
 			lepEta = abs(lep.eta)
-
             # Pt cut
 			if lep.pt < 10: continue
 
@@ -352,7 +369,7 @@ class susysinglelep(Module):
 				## Lower ID is POG_LOOSE (see cfg)
 			
 				# ID, IP and Iso check:
-				#passID = 0
+				passID = False
 				#if muID=='ICHEPmediumMuonId': passID = lep.ICHEPmediumMuonId -->> not needed any more 
 				passID = lep.mediumId
 				passIso = lep.miniPFRelIso_all < muo_miniIsoCut
@@ -361,7 +378,6 @@ class susysinglelep(Module):
 				# selected muons
 				if passID and passIso and passIP:
 					selectedTightLeps.append(lep); selectedTightLepsIdx.append(idx)
-			
 					antiVetoLeps.append(lep);
 				else:
 					selectedVetoLeps.append(lep)
@@ -387,10 +403,10 @@ class susysinglelep(Module):
 					# ELE CutBased ID
 					eidCB = lep.cutBased
 			
-					passTightID = (eidCB == 4 and lep.convVeto)
-					passMediumID = (eidCB >= 3 and lep.convVeto)
+					passTightID = (eidCB == 4 )# and abs(lep.dxy) < 0.05 and abs(lep.dz) < 0.1) # and lep.convVeto)
+					passMediumID = (eidCB >= 3)# and abs(lep.dxy) < 0.05 and abs(lep.dz) < 0.1)# and lep.convVeto)
 					#passLooseID = (eidCB >= 2)
-					passVetoID = (eidCB >= 1 and lep.convVeto)
+					passVetoID = (eidCB >= 1)# and abs(lep.dxy) < 0.2 and abs(lep.dz) < 0.5) # and lep.convVeto)
 			
 				elif eleID == 'MVA':
 					# ELE MVA ID
@@ -409,9 +425,9 @@ class susysinglelep(Module):
 					if eleID == 'MVA':
 						if lep.lostHits <= goodEl_lostHits and lep.convVeto and lep.sip3d < goodEl_sip3d: passConv = True
 					elif eleID == 'CB':
-						passConv = True # cuts already included in POG_Cuts_ID_SPRING15_25ns_v1_ConvVetoDxyDz_X
+						passConv = True #if lep.lostHits <= goodEl_lostHits and lep.convVeto and lep.sip3d < goodEl_sip3d else False  # cuts already included in POG_Cuts_ID_SPRING15_25ns_v1_ConvVetoDxyDz_X
 
-					passPostICHEPHLTHOverE = True # comment out again if (lep.hOverE < 0.04 and abs(lep.eta)>1.479) or abs(lep.eta)<=1.479 else False
+					passPostICHEPHLTHOverE = True #if (lep.hoe < 0.04 and abs(lep.eta)>1.479) or abs(lep.eta)<=1.479 else False
 			
 					# fill
 					if passIso and passConv and passPostICHEPHLTHOverE:
@@ -448,18 +464,15 @@ class susysinglelep(Module):
         # EXTRA Loop for lepOther -- for anti-selected leptons
         ###################
 
-		otherleps = [l for l in goodLep]
-        #otherleps = []
+		otherleps = [l for l in LepOther]#(set(selectedTightLeps) or set(selectedVetoLeps) or set(antiTightLeps) or set(antiVetoLeps) )]
+		nLepOther = len(otherleps)
 
 		for idx,lep in enumerate(otherleps):
-		
 			# check acceptance
 			lepEta = abs(lep.eta)
 			if lepEta > 2.4: continue
-		
 			# Pt cut
 			if lep.pt < 10: continue
-		
 			# Iso cut -- to be compatible with the trigger
 			if lep.miniPFRelIso_all > trig_miniIsoCut: continue
 		
@@ -469,11 +482,7 @@ class susysinglelep(Module):
 				## Lower ID is POG_LOOSE (see cfg)
 		
 				# ID, IP and Iso check:
-				#passID = lep.mediumMuonId == 1
 				passIso = lep.miniPFRelIso_all > muo_miniIsoCut
-				# cuts like for the LepGood muons
-				#passIP = abs(lep.dxy) < 0.05 and abs(lep.dz) < 0.1
-		
 				#if passIso and passID and passIP:
 				if passIso:
 					antiTightLeps.append(lep)
@@ -495,8 +504,8 @@ class susysinglelep(Module):
 					# ELE CutBased ID
 					eidCB = lep.cutBased
 		
-					passMediumID = (eidCB >= 3 and lep.convVeto)
-					passVetoID = (eidCB >= 1 and lep.convVeto)
+					passMediumID = (eidCB >= 3)# and lep.convVeto and abs(lep.dxy) < 0.05 and abs(lep.dz) < 0.1)
+					passVetoID = (eidCB >= 1 )#and lep.convVeto and abs(lep.dxy) < 0.05 and abs(lep.dz) < 0.1)
 				else:
 					passMediumID = False
 					passVetoID = False
@@ -519,13 +528,6 @@ class susysinglelep(Module):
 		
 				elif passVetoID: #all Medium+ eles in LepOther
 					antiVetoLeps.append(lep)
-		
-		# choose common lepton collection: select selected or anti lepton
-		if len(selectedTightLeps) > 0:
-			tightLeps = selectedTightLeps
-			tightLepsIdx = selectedTightLepsIdx
-			vetoLeps = selectedVetoLeps
-            
             #############
             #############
 		# retrive and fill branches 
@@ -534,7 +536,6 @@ class susysinglelep(Module):
 		if len(selectedTightLeps) > 0:
 			tightLeps = selectedTightLeps
 			tightLepsIdx = selectedTightLepsIdx
-		
 			vetoLeps = selectedVetoLeps
 		
 			self.out.fillBranch("nTightLeps", len(tightLeps))
@@ -567,9 +568,7 @@ class susysinglelep(Module):
 		else:
 			tightLeps = []
 			tightLepsIdx = []
-		
 			vetoLeps = []
-		
 			self.out.fillBranch("nTightLeps", 0)
 			self.out.fillBranch("nTightMu", 0)
 			self.out.fillBranch("nTightEl", 0)
@@ -619,7 +618,7 @@ class susysinglelep(Module):
 		# save second leading lepton vars
 		if len(tightLeps) > 1:# 2nd tight lep
 			self.out.fillBranch("Lep2_pt", tightLeps[1].pt)
-
+#		print " Nlep : ", len(leps) , " nTightleps " , len(tightLeps), " nVetoLEp ", len(vetoLeps)
 #####################################################################
 #####################################################################
 #################Jets, BJets, METS and filters ######################
@@ -628,13 +627,21 @@ class susysinglelep(Module):
 		########
 		### Jets
 		########
-		Jets = Collection(event, "Jet")
+		metp4 = ROOT.TLorentzVector(0,0,0,0)
+		Genmetp4 = ROOT.TLorentzVector(0,0,0,0)
 		
+		if self.isMC:
+			Genmetp4.SetPtEtaPhiM(genmet.pt,0,genmet.phi,0)
+		self.out.fillBranch("MET", metp4.Pt())
+		Jets = Collection(event, "Jet")
+		jets = [j for j in Jets if j.pt >= 20 and abs(j.eta) < 2.4 ]
+		njet = len(jets)
+		( met_px, met_py ) = ( met.pt*math.cos(met.phi), met.pt*math.sin(met.phi) )
+		( met_px_nom, met_py_nom ) = ( met_px, met_py )
 		# match reconstructed jets to generator level ones
 		# (needed to evaluate JER scale factors and uncertainties)
-		jets = [j for j in Jets if j.pt >= 20 ]
-		njet = len(jets)
-		if self.isMC == True or self.isMC == True:
+		
+		if self.isMC == True or self.isSig == True:
 			rho = getattr(event,"fixedGridRhoFastjetAll")
 			genJets = Collection(event, "GenJet" )
 			pairs = matchObjectCollection(Jets, genJets)
@@ -642,8 +649,18 @@ class susysinglelep(Module):
 				genJet = pairs[jet]
 				if smearJER==True :
 					(jet_pt_jerNomVal, jet_pt_jerUpVal, jet_pt_jerDownVal) = self.jetSmearer.getSmearValsPt(jet, genJet, rho)
-					jet.pt = jet_pt_jerNomVal * jet.pt
-		
+					jet_pt_nom = jet_pt_jerNomVal * jet.pt
+					if jet.pt > 15.:
+						jet_cosPhi = math.cos(jet.phi)
+						jet_sinPhi = math.sin(jet.phi)
+						met_px_nom = met_px_nom - (jet_pt_nom - jet.pt)*jet_cosPhi
+						met_py_nom = met_py_nom - (jet_pt_nom - jet.pt)*jet_sinPhi
+						met_pt_nom = math.sqrt(met_px_nom**2 + met_py_nom**2)
+						met_phi_nom = math.atan2(met_py_nom, met_px_nom)
+						met.pt = met_pt_nom
+						met.phi = met_phi_nom
+					jet.pt = jet_pt_nom
+		metp4.SetPtEtaPhiM(met.pt,0.,met.phi,0.) # only use met vector to derive transverse quantities)		
 		centralJet30 = []; centralJet30idx = []
 		centralJet40 = []
 		cleanJets25 = []; cleanJets25idx = [] 
@@ -654,7 +671,7 @@ class susysinglelep(Module):
 			# Cleaning up of fastsim jets (from "corridor" studies) https://twiki.cern.ch/twiki/bin/viewauth/CMS/SUSRecommendationsMoriond17#Cleaning_up_of_fastsim_jets_from
 			if self.isSig: #only check for signals (see condition check above)
 				self.out.fillBranch("isDPhiSignal",1) 
-				if j.pt>20 and abs(j.eta)<2.5 and not j.nMuons and not j.nElectrons and j.chHEF<0.1: self.out.fillBranch("Flag_fastSimCorridorJetCleaning", 0  )
+				if j.pt>20 and abs(j.eta)<2.5 and pairs[j].pt == 0 and j.chHEF<0.1:	self.out.fillBranch("Flag_fastSimCorridorJetCleaning", 0  )
 			if j.pt>25 :
 				cleanJets25.append(j)
 				cleanJets25idx.append(j)
@@ -687,7 +704,7 @@ class susysinglelep(Module):
 		cleanJets30 = centralJet30
 		for lep in tightLeps:
 			# don't clean LepGood, only LepOther
-			if lep not in otherleps: continue
+			#if lep not in otherleps: continue
 		
 			jNear, dRmin = None, 99
 			# find nearest jet
@@ -765,14 +782,7 @@ class susysinglelep(Module):
 		# MET
 		#####
 		
-		metp4 = ROOT.TLorentzVector(0,0,0,0)
-		metp4.SetPtEtaPhiM(met.pt,0.,met.phi,0.) # only use met vector to derive transverse quantities)
-				
-		Genmetp4 = ROOT.TLorentzVector(0,0,0,0)
-		
-		if self.isMC:
-			Genmetp4.SetPtEtaPhiM(genmet.pt,0,genmet.phi,0)
-		self.out.fillBranch("MET", metp4.Pt())
+
 #####################################################################
 #####################################################################
 #################High level variables ###############################
@@ -856,10 +866,10 @@ class susysinglelep(Module):
 		self.out.fillBranch("Mll", Mll)
 		
 		# RA2 proposed filter
-		self.out.fillBranch("RA2_muJetFilter", True) # normally true 
-		for j in cJet30Clean:
-			if j.pt > 200 and j.chEmEF > 0.5 and abs(math.acos(math.cos(j.phi-metp4.Phi()))) > (math.pi - 0.4):
-				self.out.fillBranch("RA2_muJetFilter", False)
+		self.out.fillBranch("RA2_muJetFilter", True) # normally true for now # don't know how to get the Muon energy fraction from EMEF
+		#for j in cJet30Clean:
+		#	if j.pt > 200 and j.chEmEF > 0.5 and abs(math.acos(math.cos(j.phi-metp4.Phi()))) > (math.pi - 0.4):
+		#		self.out.fillBranch("RA2_muJetFilter", False)
 		
 
 		## MET FILTERS for data looks like the met filters are applied already for nanoAOD 
@@ -958,10 +968,6 @@ class susysinglelep(Module):
 					
 		
 		return True
-		
-
-# define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
-# define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
 susy1lepSIG = lambda : susysinglelep(True,True)#,
 susy1lepMC = lambda : susysinglelep(True,False)#,
 susy1lepdata = lambda : susysinglelep(False ,False) 

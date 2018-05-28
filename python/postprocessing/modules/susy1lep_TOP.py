@@ -233,12 +233,31 @@ class susyTOP(Module):
 		met = Object(event, "MET")
 		genmet = Object(event, "GenMET")
 		# for all leptons (veto or tight)
-		Elecs = [x for x in electrons if x.eta < 2.4  and x.pt > 10 and x.miniPFRelIso_all < 0.4 and x.cutBased >= 1]      
-		Mus = [x for x in muons if x.eta < 2.4 and  x.pt > 10 and x.miniPFRelIso_all < 0.4 ]
-		goodLep = Elecs + Mus 
-		
-		leps = [l for l in goodLep]
-		nlep = len(leps)
+		Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
+		Mus = [x for x in muons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.miniPFRelIso_all < 0.4  ]
+		Elec_Other = [x for x in electrons if x not in set(Elecs) and abs(x.eta) < 2.4 if x.cutBased>=1]
+		Mus_Other = [x for x in muons if  x not in set(Mus) and abs(x.eta) < 2.4 ]
+		goodLep = [i for i in itertools.chain(Mus, Elecs)]
+		LepOther = [i for i in itertools.chain(Mus_Other, Elec_Other)]
+		# Clean good leptons and otherleptons 
+		for Mu in goodLep :
+			if abs(Mu.pdgId) == 13 :
+				for El in goodLep :
+					if abs(El.pdgId) == 11 : 
+						if Mu.p4().DeltaR(El.p4()) < 0.05 :
+							#print "overlap fonded remove Electron"
+							goodLep.remove(El)
+		for Mu in LepOther :
+			if abs(Mu.pdgId) == 13 :
+				for El in LepOther :
+					if abs(El.pdgId) == 11 : 
+						if Mu.p4().DeltaR(El.p4()) < 0.05 :
+							#print "overlap fonded remove Electron"
+							LepOther.remove(El)
+				
+		#LepOther = goodLep
+		leps = goodLep 
+		nlep = len(leps)		
         ### LEPTONS
 		
         # selected good leptons
@@ -297,10 +316,10 @@ class susyTOP(Module):
 					# ELE CutBased ID
 					eidCB = lep.cutBased
 			
-					passTightID = (eidCB == 4 and lep.convVeto)
-					passMediumID = (eidCB >= 3 and lep.convVeto)
+					passTightID = (eidCB == 4)# and lep.convVeto)
+					passMediumID = (eidCB >= 3)# and lep.convVeto)
 					#passLooseID = (eidCB >= 2)
-					passVetoID = (eidCB >= 1 and lep.convVeto)
+					passVetoID = (eidCB >= 1 )#and lep.convVeto)
 			
 				elif eleID == 'MVA':
 					# ELE MVA ID
@@ -358,7 +377,7 @@ class susyTOP(Module):
         # EXTRA Loop for lepOther -- for anti-selected leptons
         ###################
 
-		otherleps = [l for l in goodLep]
+		otherleps = [l for l in LepOther]
         #otherleps = []
 
 		for idx,lep in enumerate(otherleps):
@@ -459,7 +478,7 @@ class susyTOP(Module):
 		
 			vetoLeps = []
 		nTightLeps = len(tightLeps) 
-		# Met 
+		'''# Met 
 		metp4 = ROOT.TLorentzVector(0,0,0,0)
 		if hasattr(event, 'metMuEGClean_pt'):
 			metp4.SetPtEtaPhiM(event.metMuEGClean_pt,event.metMuEGClean_eta,event.metMuEGClean_phi,event.metMuEGClean_mass)
@@ -468,7 +487,7 @@ class susyTOP(Module):
 		if hasattr(event, 'metMuEGClean_pt'):
 			pmiss  =array.array('d',[event.metMuEGClean_pt * math.cos(event.metMuEGClean_phi), event.metMuEGClean_pt * math.sin(event.metMuEGClean_phi)] )
 		else:
-			pmiss  =array.array('d',[met.pt * math.cos(met.phi), met.pt * math.sin(met.phi)] )
+			pmiss  =array.array('d',[met.pt * math.cos(met.phi), met.pt * math.sin(met.phi)] )''''
 
 #####################################################################
 #####################################################################
@@ -478,23 +497,41 @@ class susyTOP(Module):
 		########
 		### Jets
 		########
-		jets = [j for j in Jets if j.pt >= 20 ]
-		njet = len(jets)
-		# it's not needed for nanoAOD there is a module to do the job for you 
-		# Apply JEC up/down variations if needed (only MC!)
-		'''if self.isMC == True:
-			if corrJEC == "central":
-				pass # don't do anything
-				#for jet in jets: jet.pt = jet.rawPt * jet.corr
-			elif corrJEC == "up":
-				for jet in jets: jet.pt = jet.rawPt * jet.corr_JECUp
-			elif corrJEC == "down":
-				for jet in jets: jet.pt = jet.rawPt * jet.corr_JECDown
-			else:
-				pass
-			if smearJER!= "None":
-				for jet in jets: jet.pt = returnJERSmearedPt(jet.pt,abs(jet.eta),jet.mcPt,smearJER)'''
+		metp4 = ROOT.TLorentzVector(0,0,0,0)
+		Genmetp4 = ROOT.TLorentzVector(0,0,0,0)
 		
+		if self.isMC:
+			Genmetp4.SetPtEtaPhiM(genmet.pt,0,genmet.phi,0)
+		self.out.fillBranch("MET", metp4.Pt())
+		Jets = Collection(event, "Jet")
+		jets = [j for j in Jets if j.pt >= 20 and abs(j.eta) < 2.4 ]
+		njet = len(jets)
+		( met_px, met_py ) = ( met.pt*math.cos(met.phi), met.pt*math.sin(met.phi) )
+		( met_px_nom, met_py_nom ) = ( met_px, met_py )
+		# match reconstructed jets to generator level ones
+		# (needed to evaluate JER scale factors and uncertainties)
+		
+		if self.isMC == True or self.isMC == True:
+			rho = getattr(event,"fixedGridRhoFastjetAll")
+			genJets = Collection(event, "GenJet" )
+			pairs = matchObjectCollection(Jets, genJets)
+			for jet in jets:
+				genJet = pairs[jet]
+				if smearJER==True :
+					(jet_pt_jerNomVal, jet_pt_jerUpVal, jet_pt_jerDownVal) = self.jetSmearer.getSmearValsPt(jet, genJet, rho)
+					jet_pt_nom = jet_pt_jerNomVal * jet.pt
+					if jet.pt > 15.:
+						jet_cosPhi = math.cos(jet.phi)
+						jet_sinPhi = math.sin(jet.phi)
+						met_px_nom = met_px_nom - (jet_pt_nom - jet.pt)*jet_cosPhi
+						met_py_nom = met_py_nom - (jet_pt_nom - jet.pt)*jet_sinPhi
+						met_pt_nom = math.sqrt(met_px_nom**2 + met_py_nom**2)
+						met_phi_nom = math.atan2(met_py_nom, met_px_nom)
+						met.pt = met_pt_nom
+						met.phi = met_phi_nom
+					jet.pt = jet_pt_nom
+		metp4.SetPtEtaPhiM(met.pt,0.,met.phi,0.) # only use met vector to derive transverse quantities)		
+
 		centralJet30 = []; centralJet30idx = []
 		centralJet40 = []
 		cleanJets25 = []; cleanJets25idx = [] 
