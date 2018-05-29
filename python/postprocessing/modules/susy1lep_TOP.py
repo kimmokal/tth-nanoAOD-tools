@@ -8,6 +8,8 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection,Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetSmearer import jetSmearer
+import itertools
+from PhysicsTools.NanoAODTools.postprocessing.tools import matchObjectCollection, matchObjectCollectionMultiple
 
 from ROOT import TLorentzVector, TVector2, std
 
@@ -183,8 +185,9 @@ def minValueForIdxList(values,idxlist):
 
 
 class susyTOP(Module):
-    def __init__(self):
-        pass
+    def __init__(self,isMC):
+		self.isMC = isMC
+		pass
     def beginJob(self):
         pass
     def endJob(self):
@@ -487,7 +490,7 @@ class susyTOP(Module):
 		if hasattr(event, 'metMuEGClean_pt'):
 			pmiss  =array.array('d',[event.metMuEGClean_pt * math.cos(event.metMuEGClean_phi), event.metMuEGClean_pt * math.sin(event.metMuEGClean_phi)] )
 		else:
-			pmiss  =array.array('d',[met.pt * math.cos(met.phi), met.pt * math.sin(met.phi)] )''''
+			pmiss  =array.array('d',[met.pt * math.cos(met.phi), met.pt * math.sin(met.phi)] )'''
 
 #####################################################################
 #####################################################################
@@ -511,7 +514,7 @@ class susyTOP(Module):
 		# match reconstructed jets to generator level ones
 		# (needed to evaluate JER scale factors and uncertainties)
 		
-		if self.isMC == True or self.isMC == True:
+		if self.isMC :
 			rho = getattr(event,"fixedGridRhoFastjetAll")
 			genJets = Collection(event, "GenJet" )
 			pairs = matchObjectCollection(Jets, genJets)
@@ -870,5 +873,6 @@ class susyTOP(Module):
 
 # define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
 # define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
-susy1lepTOP = lambda : susyTOP()
+susy1lepTOPMC = lambda : susyTOP(True)
+susy1lepTOPData = lambda : susyTOP(False)
  

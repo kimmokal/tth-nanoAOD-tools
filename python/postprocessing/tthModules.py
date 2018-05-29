@@ -22,7 +22,7 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jecUncertainties impor
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepdata
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepSIG
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepMC
-from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_TOP import susy1lepTOP
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_TOP import susy1lepTOPMC ,susy1lepTOPData
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_Signal import susy_1l_Sig16 ,susy_1l_Sig17
 #correct the nJets 
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_nISR import susy_1l_nISR16

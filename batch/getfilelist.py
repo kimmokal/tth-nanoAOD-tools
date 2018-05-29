@@ -51,7 +51,7 @@ def moduletorun(sample):
 	if "/SMS-T1tttt" in sample:
 		isSIG = True
 	if isMC and not isSIG : 
-		modu = "susy1lepMC,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,susy1lepTOP,susy_1l_gen"#,xsec,genpartsusymod
+		modu = "susy1lepMC,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,susy1lepTOPMC,susy_1l_gen"#,xsec,genpartsusymod
 		if era == 2016 : 
 			modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_lepSF,countHistogramAll_2016"
 		if era == 2017 :
@@ -59,11 +59,11 @@ def moduletorun(sample):
 		if "TTJets" in str(sample) and era == 2016: modu+=",susy_1l_nISR16"
 		if "TTJets" in str(sample) and era == 2017: modu+=",susy_1l_nISR17"
 	elif isMC and isSIG :
-		modu = "susy1lepSIG,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,puWeight,susy1lepTOP,susy_1l_gen"#,xsec,genpartsusymod
+		modu = "susy1lepSIG,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,puWeight,susy1lepTOPMC,susy_1l_gen"#,xsec,genpartsusymod
 		if era == 2016 : modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_lepSF,susy_1l_Sig16,countHistogramAll_2016"
 		if era == 2017 : modu+=",jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,susy_lepSF,susy_1l_Sig17,countHistogramAll_2017"
 	else : 
-		modu = "susy1lepdata,susy_1l_Trigg,susy_1l_FiltersData,susy1lepTOP"
+		modu = "susy1lepdata,susy_1l_Trigg,susy_1l_FiltersData,susy1lepTOPData"
 	return modu
 
 if __name__ == '__main__':

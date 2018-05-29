@@ -17,7 +17,7 @@ drop FatJet_subJetIdx2
 drop FatJet_tau1
 drop FatJet_tau2
 drop FatJet_tau3
-drop drop FatJet_tau4
+drop FatJet_tau4
 drop nFatJet
 drop GenDressedLepton_eta
 drop GenDressedLepton_mass

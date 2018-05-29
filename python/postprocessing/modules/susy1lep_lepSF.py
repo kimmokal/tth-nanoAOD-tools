@@ -5,6 +5,8 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection 
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
+import itertools
+
 
 
 #################
@@ -172,7 +174,9 @@ class lepSFProducer(Module):
 		pass
 	def analyze(self, event):
 		"""process event, return True (go to next module) or False (fail, go to next event)"""
-goodLep = []
+		electrons = Collection(event, "Electron")
+		muons = Collection(event, "Muon")
+		goodLep = []
 		Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
 		Mus = [x for x in muons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.miniPFRelIso_all < 0.4  ]
 		goodLep = [i for i in itertools.chain(Mus, Elecs)]
@@ -187,7 +191,7 @@ goodLep = []
 				
 		leps = goodLep 
 		nlep = len(leps)		
-        # selected good leptons
+		# selected good leptons
 		selectedTightLeps = []
 		for idx,lep in enumerate(leps):
 			# for acceptance check
