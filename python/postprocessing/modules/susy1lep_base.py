@@ -14,7 +14,7 @@ from PhysicsTools.NanoAODTools.postprocessing.tools import matchObjectCollection
 import itertools
 from ROOT import TLorentzVector, TVector2, std
 mt2obj = ROOT.heppy.Davismt2.Davismt2()
-
+from deltar import bestMatch
 
 #################
 ### Cuts and WP
@@ -149,37 +149,7 @@ def checkEleMVA(lep,WP = 'Tight', era = "Spring16" ):
 		return passID
 
 
-def getPhysObjectArray(j): # https://github.com/HephySusySW/Workspace/blob/72X-master/RA4Analysis/python/mt2w.py
-    px = j.pt*math.cos(j.phi )
-    py = j.pt*math.sin(j.phi )
-    pz = j.pt*math.sinh(j.eta )
-    E = math.sqrt(px*px+py*py+pz*pz) #assuming massless particles...
-    return array.array('d', [E, px, py,pz])
-
-def mt_2(p4one, p4two):
-    return math.sqrt(2*p4one.Pt()*p4two.Pt()*(1-math.cos(p4one.Phi()-p4two.Phi())))
-
-def GetZfromM(vector1,vector2,mass):
-    MT = math.sqrt(2*vector1.Pt()*vector2.Pt()*(1-math.cos(vector2.DeltaPhi(vector1))))
-    if (MT<mass):
-        Met2D = TVector2(vector2.Px(),vector2.Py())
-        Lep2D = TVector2(vector1.Px(),vector1.Py())
-        A = mass*mass/2.+Met2D*Lep2D
-        Delta = vector1.E()*vector1.E()*(A*A-Met2D.Mod2()*Lep2D.Mod2())
-        MetZ1 = (A*vector1.Pz()+math.sqrt(Delta))/Lep2D.Mod2()
-        MetZ2 = (A*vector1.Pz()-math.sqrt(Delta))/Lep2D.Mod2()
-    else:
-        MetZ1 =vector1.Pz()*vector2.Pt()/vector1.Pt()
-        MetZ2 =vector1.Pz()*vector2.Pt()/vector1.Pt()
-    return [MT,MetZ1,MetZ2]
-
-def minValueForIdxList(values,idxlist):
-    cleanedValueList = [val for i,val in enumerate(values) if i in idxlist]
-    if len(cleanedValueList)>0: return min(cleanedValueList)
-    else: return -999
 #  print cleanedValueList, min(cleanedValueList)#d, key=d.get)
-
-
 class susysinglelep(Module):
 	def __init__(self, isMC , isSig):#, HTFilter, LTFilter):#, muonSelection, electronSelection):
 		self.isMC = isMC
@@ -197,6 +167,26 @@ class susysinglelep(Module):
 	def endJob(self):
 		self.jetSmearer.endJob()
 		pass
+	def matchLeptons(self, event):
+		def plausible(rec,gen):
+			if abs(rec.pdgId) == 11 and abs(gen.pdgId) != 11:   return False
+			if abs(rec.pdgId) == 13 and abs(gen.pdgId) != 13:   return False
+			dr = deltaR(rec.etc,rec.phi,gen.eta,gen.phi)
+			if dr < 0.3: return True
+			if rec.pt < 10 and abs(rec.pdgId) == 13 and gen.pdgId != rec.pdgId: return False
+			if dr < 0.7: return True
+			if min(rec.pt,gen.pt)/max(rec.pt,gen.pt) < 0.3: return False
+			return True
+		leps = event.selectedLeptons
+		match = matchObjectCollectionMultiple(leps, 
+									event.genleps + event.gentauleps, 
+									dRmax = 1.2, presel=lambda plausible : True)
+		for lep in leps:
+			gen = match[lep]
+			lep.mcMatchId  = (gen.sourceId if gen != None else  0)
+			lep.mcMatchTau = (gen in event.gentauleps if gen else -99)
+			lep.mcLep=gen
+			
 	def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
 		self.out = wrappedOutputTree
 		self.out.branch("isData","I");
@@ -282,6 +272,8 @@ class susysinglelep(Module):
 		self.out.branch("iso_pt","F");
 		self.out.branch("iso_MT2","F");
 		self.out.branch("iso_Veto","O");
+		self.out.branch("nLepGood","F");
+		self.out.branch("nLepOther","F")
        # Store the Xsec 
 		self.out.branch("Xsec",  "F");
 		self.xs = getXsec(inputFile.GetName())
@@ -301,14 +293,67 @@ class susysinglelep(Module):
 	
 	def analyze(self, event):
  		"""process event, return True (go to next module) or False (fail, go to next event)"""
-		electrons = Collection(event, "Electron")
-		muons = Collection(event, "Muon")
+		allelectrons = Collection(event, "Electron")
+		allmuons = Collection(event, "Muon")
 		Jets = Collection(event, "Jet")
 		met = Object(event, "MET")
 		genmet = Object(event, "GenMET")
+		if self.isMC or self.isSig :
+			Gen = Collection(event, "GenPart")
+			event.genleps = [l for l in Gen if abs(l.pdgId) == 11 or abs(l.pdgId) == 13]
+			GenTau = Collection(event, "GenVisTau")
+			event.gentauleps = [l for l in GenTau ]
 		# for all leptons (veto or tight)
-		goodLep = []
-		Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
+		
+		### inclusive leptons = all leptons that could be considered somewhere in the analysis, with minimal requirements (used e.g. to match to MC)
+		event.inclusiveLeptons = []
+		### selected leptons = subset of inclusive leptons passing some basic id definition and pt requirement
+		### other    leptons = subset of inclusive leptons failing some basic id definition and pt requirement
+		event.selectedLeptons = []
+		event.selectedMuons = []
+		event.selectedElectrons = []
+		event.otherLeptons = []
+		inclusiveMuons = []
+		inclusiveElectrons = []
+		for mu in allmuons:
+			if (mu.pt>10 and abs(mu.eta)<2.4 and
+					abs(mu.dxy)<0.5 and abs(mu.dz)<1.):
+				inclusiveMuons.append(mu)
+		for ele in allelectrons:
+			if ( ele.cutBased >=1 and
+					ele.pt>10 and abs(ele.eta)<2.4):# and abs(ele.dxy)<0.5 and abs(ele.dz)<1. and ele.lostHits <=1.0):
+				inclusiveElectrons.append(ele)
+		event.inclusiveLeptons = inclusiveMuons + inclusiveElectrons
+		
+		# make loose leptons (basic selection)
+		for mu in inclusiveMuons :
+				if (mu.pt > 10 and abs(mu.eta) < 2.4 and mu.miniPFRelIso_all < 0.4 and abs(mu.dxy)<0.05 and abs(mu.dz)<0.5):
+					event.selectedLeptons.append(mu)
+					event.selectedMuons.append(mu)
+				else:
+					event.otherLeptons.append(mu)
+		looseMuons = event.selectedLeptons[:]
+		for ele in inclusiveElectrons :
+			ele.looseIdOnly = ele.cutBased >=1
+			if (ele.looseIdOnly and
+						ele.pt>10 and abs(ele.eta)<2.4 and ele.miniPFRelIso_all < 0.4 and ele.convVeto == 1 and # and abs(ele.dxy)<0.05 and abs(ele.dz)<0.5  and ele.lostHits <=1.0 and 
+						(bestMatch(ele, looseMuons)[1] > (0.05**2))):
+					event.selectedLeptons.append(ele)
+					event.selectedElectrons.append(ele)
+			else:
+					event.otherLeptons.append(ele)
+		
+		event.otherLeptons.sort(key = lambda l : l.pt, reverse = True)
+		event.selectedLeptons.sort(key = lambda l : l.pt, reverse = True)
+		event.selectedMuons.sort(key = lambda l : l.pt, reverse = True)
+		event.selectedElectrons.sort(key = lambda l : l.pt, reverse = True)
+		event.inclusiveLeptons.sort(key = lambda l : l.pt, reverse = True)		
+		
+		goodLep = [l for l in event.selectedLeptons]
+		LepOther = [l for l in event.otherLeptons]
+		self.out.fillBranch("nLepGood",len(goodLep))
+		self.out.fillBranch("nLepOther",len(LepOther))
+		'''Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
 		Mus = [x for x in muons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.miniPFRelIso_all < 0.4  ]
 		Elec_Other = [x for x in electrons if x not in set(Elecs) and abs(x.eta) < 2.4 if x.cutBased>=1]
 		Mus_Other = [x for x in muons if  x not in set(Mus) and abs(x.eta) < 2.4 ]
@@ -328,7 +373,7 @@ class susysinglelep(Module):
 					if abs(El.pdgId) == 11 : 
 						if Mu.p4().DeltaR(El.p4()) < 0.05 :
 							#print "overlap fonded remove Electron"
-							LepOther.remove(El)
+							LepOther.remove(El)'''
 				
 		#LepOther = goodLep
 		leps = goodLep 
@@ -704,7 +749,7 @@ class susysinglelep(Module):
 		cleanJets30 = centralJet30
 		for lep in tightLeps:
 			# don't clean LepGood, only LepOther
-			#if lep not in otherleps: continue
+			if lep not in otherleps: continue
 		
 			jNear, dRmin = None, 99
 			# find nearest jet
