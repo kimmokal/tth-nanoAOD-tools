@@ -15,7 +15,7 @@ cd ${exedir}
 export X509_USER_PROXY=@X509
 voms-proxy-info -all
 nano_postproc.py -I tthAnalysis.NanoAODTools.postprocessing.tthModules @MODULES @OUTDIR @INPUTFILE -b $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/keep_or_drop.txt
-#nano_postproc.py -s 2 @OUTDIR @OUTDIR/@STEP1 -c "HT1 > 350 && ST1 > 150"
-#rm -rf @OUTDIR/@STEP1
+nano_postproc.py -s 2 @OUTDIR @OUTDIR/@STEP1 -c "HT1 > 350 && ST1 > 150"
+rm -rf @OUTDIR/@STEP1
 
 

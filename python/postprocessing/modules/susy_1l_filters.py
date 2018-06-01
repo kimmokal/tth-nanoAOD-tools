@@ -44,56 +44,58 @@ class susy1lepFilter(Module):
         pass
     def analyze(self, event):
         
-        runNr = getattr(event, "run")
-        lumiNr = getattr(event, "luminosityBlock")
-        eventNr = getattr(event, "event")        
-        #print "Running on ", runNr, ":", lumiNr, ":", eventNr
-        
-        if (not self.isData):
-            passCSCFilterList           = True
-            passFilters                 = True
-            passFiltersMoriond2017Tight = True
-        else:
-            global filterList
-            if filterList == None: filterList = readList(filterName)
-
-            # check MET text filter files
-            if (runNr,lumiNr,eventNr) in filterList:
-                #print "yes", runNr,lumiNr,eventNr
-                passCSCFilterList = False
-            else:
-                #print "no", runNr,lumiNr,eventNr
-                passCSCFilterList = True
-        
-            # check filters present in event
-            if hasattr(event,"Flag_eeBadScFilter"):
-                flag_eeBadScFilter = getattr(event, "Flag_eeBadScFilter")
-                flag_HBHENoiseFilter = getattr(event, "Flag_HBHENoiseFilter")
-                flag_HBHENoiseIsoFilter = getattr(event, "Flag_HBHENoiseIsoFilter")
-                flag_EcalDeadCellTriggerPrimitiveFilter = getattr(event, "Flag_EcalDeadCellTriggerPrimitiveFilter")
-                flag_goodVertices = getattr(event, "Flag_goodVertices")
-                flag_globalTightHalo2016Filter = getattr(event, "Flag_globalTightHalo2016Filter")
-                flag_badMuons = getattr(event, "Flag_badMuons")
-                flag_duplicateMuons = getattr(event, "Flag_duplicateMuons")
-                
-                # Suggested by Isabell on 04.04.2018 meeting:
-                flag_badChargedHadronSummer2016 = getattr(event, "Flag_chargedHadronTrackResolutionFilter")
-                flag_badMuonSummer2016 = getattr(event, "Flag_muonBadTrackFilter")
-                
-                #forMoriond2017 https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFiltersRun2#Moriond_2017
-                #for Moriond 2017: use updated badChargedHadron and badPFMuon filters (Ece's Summer2016 implementation). Do NOT use Flag_badMuons and Flag_duplicateMuons (they are only to be used if new tails would appear in the metMuEGClean collection comparing to the METUncorrected collection)
-                passFilters = flag_HBHENoiseFilter and flag_HBHENoiseIsoFilter and flag_EcalDeadCellTriggerPrimitiveFilter and  flag_goodVertices and flag_eeBadScFilter and flag_globalTightHalo2016Filter and flag_badChargedHadronSummer2016 and flag_badMuonSummer2016
-                #also apply Flag_badMuons and Flag_duplicateMuons (they are only to be used if new tails would appear in the metMuEGClean collection comparing to the METUncorrected collection)
-                passFiltersMoriond2017Tight = passFilters and not flag_badMuons and not flag_duplicateMuons
-            else:
-                passFilters                 = True
-                passFiltersMoriond2017Tight = True
-        
-        self.out.fillBranch('passFilters', passFilters)
-        self.out.fillBranch('passFiltersMoriond2017Tight', passFiltersMoriond2017Tight)
-        self.out.fillBranch('passCSCFilterList', passCSCFilterList)
-        
-        return True
+		runNr = getattr(event, "run")
+		lumiNr = getattr(event, "luminosityBlock")
+		eventNr = getattr(event, "event")        
+		#print "Running on ", runNr, ":", lumiNr, ":", eventNr
+		
+		if (not self.isData):
+			passCSCFilterList           = True
+			passFilters                 = True
+			passFiltersMoriond2017Tight = True
+		else:
+			global filterList
+			if filterList == None: filterList = readList(filterName)
+		
+			# check MET text filter files
+			if (runNr,lumiNr,eventNr) in filterList:
+				#print "yes", runNr,lumiNr,eventNr
+				passCSCFilterList = False
+			else:
+				#print "no", runNr,lumiNr,eventNr
+				passCSCFilterList = True
+		
+			# check filters present in event
+			if hasattr(event,"Flag_eeBadScFilter"):
+				flag_eeBadScFilter = getattr(event, "Flag_eeBadScFilter")
+				flag_HBHENoiseFilter = getattr(event, "Flag_HBHENoiseFilter")
+				flag_HBHENoiseIsoFilter = getattr(event, "Flag_HBHENoiseIsoFilter")
+				flag_EcalDeadCellTriggerPrimitiveFilter = getattr(event, "Flag_EcalDeadCellTriggerPrimitiveFilter")
+				flag_goodVertices = getattr(event, "Flag_goodVertices")
+				flag_globalTightHalo2016Filter = getattr(event, "Flag_globalTightHalo2016Filter")
+				if hasattr(event, "Flag_badMuons"):
+					flag_badMuons = getattr(event, "Flag_badMuons")
+					flag_duplicateMuons = getattr(event, "Flag_duplicateMuons")
+				else : 
+					flag_duplicateMuons = True
+					flag_badMuons = getattr(event,"Flag_BadPFMuonFilter")
+				# Suggested by Isabell on 04.04.2018 meeting:
+				flag_badChargedHadronSummer2016 = getattr(event, "Flag_chargedHadronTrackResolutionFilter")
+				flag_badMuonSummer2016 = getattr(event, "Flag_muonBadTrackFilter")
+				
+				#forMoriond2017 https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFiltersRun2#Moriond_2017
+				#for Moriond 2017: use updated badChargedHadron and badPFMuon filters (Ece's Summer2016 implementation). Do NOT use Flag_badMuons and Flag_duplicateMuons (they are only to be used if new tails would appear in the metMuEGClean collection comparing to the METUncorrected collection)
+				passFilters = flag_HBHENoiseFilter and flag_HBHENoiseIsoFilter and flag_EcalDeadCellTriggerPrimitiveFilter and  flag_goodVertices and flag_eeBadScFilter and flag_globalTightHalo2016Filter and flag_badChargedHadronSummer2016 and flag_badMuonSummer2016
+				#also apply Flag_badMuons and Flag_duplicateMuons (they are only to be used if new tails would appear in the metMuEGClean collection comparing to the METUncorrected collection)
+				passFiltersMoriond2017Tight = passFilters and not flag_badMuons and not flag_duplicateMuons
+			else:
+				passFilters                 = True
+				passFiltersMoriond2017Tight = True
+		
+		self.out.fillBranch('passFilters', passFilters)
+		self.out.fillBranch('passFiltersMoriond2017Tight', passFiltersMoriond2017Tight)
+		self.out.fillBranch('passCSCFilterList', passCSCFilterList)
+		return True
         
 
 # define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
