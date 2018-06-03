@@ -4,14 +4,14 @@ from math import floor
 import math
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object 
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
-
+import os
 # import gluino xsec table
 xsecGlu = {} # dict for xsecs
-xsecFile = "/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/python/postprocessing/modules/glu_xsecs_13TeV.txt"
+xsecFile = "%s/src/tthAnalysis/NanoAODTools/python/postprocessing/modules/glu_xsecs_13TeV.txt" % os.environ['CMSSW_BASE']
 cntsSusy = {} # dict for signal counts
 C_ISRweightsSusy = {}
-cntFile = "/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/python/postprocessing/modules/counts_T1tttt_2016.txt"
-ISRweightFile = "/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/python/postprocessing/modules/ISRnormWeights_T1tttt2016.txt"
+cntFile = "%s/src/tthAnalysis/NanoAODTools/python/postprocessing/modules/counts_T1tttt_2016.txt" % os.environ['CMSSW_BASE']
+ISRweightFile = "%s/src/tthAnalysis/NanoAODTools/python/postprocessing/modules/ISRnormWeights_T1tttt2016.txt" % os.environ['CMSSW_BASE']
 
 def deltaR2( e1, p1, e2=None, p2=None):
 	"""Take either 4 arguments (eta,phi, eta,phi) or two objects that have 'eta', 'phi' methods)"""

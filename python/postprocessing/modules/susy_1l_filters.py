@@ -3,9 +3,9 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object 
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
+import os
 
-
-filterName = "/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/data/dummyFilterlist.txt" #to process 2016 data quickly...
+filterName = "%s/src/tthAnalysis/NanoAODTools/data/dummyFilterlist.txt" % os.environ['CMSSW_BASE']#to process 2016 data quickly...
 filterList = None
 
 

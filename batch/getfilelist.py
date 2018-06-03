@@ -12,9 +12,14 @@ import subprocess
 import shutil
 
 ## to be changed by user 
-workarea = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src'
-exearea = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch'
-X509 = "/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch/x509up_u29118"
+workarea_d = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src'
+exearea_d = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch'
+X509_d = "/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch/x509up_u29118"
+
+workarea_b = '/lustre/home/amohamed/susy-desy/nanoAOD/CMSSW_9_4_4/src'
+exearea_b = '/lustre/home/amohamed/susy-desy/nanoAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch'
+X509_b = "/lustre/home/amohamed/susy-desy/nanoAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch/x509up_u51021"
+
 #X509name = 'x509up_u29118'
 ## to be kept 
 condTEMP = './templates/submit.condor'
@@ -73,9 +78,18 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Runs a NAF batch system for nanoAOD', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument('dataList', help='List of datasets to process', metavar='datasets.txt')
 	parser.add_argument('--out', help='out put directory',default=None, metavar='Dir')
+	parser.add_argument('--site', help='Site DESY or Bari',default=None, metavar='Site')
 	args = parser.parse_args()
 	listtxt = open(args.dataList,"r")
-	
+	if args.site == "DESY":
+		workarea = workarea_d
+		exearea = exearea_d
+		X509 = X509_d
+	elif args.site == "Bari":
+		workarea = workarea_b
+		exearea = exearea_b
+		X509 = X509_b
+		
 	outdire = args.out
 	
 	os.system("export X509_USER_PROXY="+X509)
@@ -162,7 +176,10 @@ if __name__ == '__main__':
 			f2.close()
 			file = open('submit_all_to_batch_HTC.sh','a')
 			file.write("\n")
-			file.write("condor_submit "+dirname+"/Condor"+textname+str(i)+".submit")
+			if args.site == "DESY" : 
+				file.write("condor_submit "+dirname+"/Condor"+textname+str(i)+".submit")
+			elif args.site == "Bari" :
+				file.write("condor_submit -name ettore "+dirname+"/Condor"+textname+str(i)+".submit")
 			file.close() 
 			i+=1
 	os.system('chmod a+x submit_all_to_batch_HTC.sh')
