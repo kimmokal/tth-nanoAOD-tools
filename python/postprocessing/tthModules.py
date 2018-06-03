@@ -34,6 +34,6 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_trig import trigsu
 #lepton SF 
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_lepSF import susy_lepSF
 ###### Oleksii
-from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_triggers import susy_1l_Trigg
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_triggers import susy_1l_Trigg2016,susy_1l_Trigg2017
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_filters import susy_1l_FiltersMC, susy_1l_FiltersData
 from tthAnalysis.NanoAODTools.postprocessing.modules.new import susy1leptest

@@ -39,6 +39,7 @@ class susy1lepTrig(Module):
 		# triggers for EleOR:
 		if self.era == 2016:
 			trig_EleHT450 = False 
+			trig_MuHT450 = False
 			trig_Ele105 = getattr(event, "HLT_Ele105_CaloIdVT_GsfTrkIdT")
 			trig_Ele115 = getattr(event, "HLT_Ele115_CaloIdVT_GsfTrkIdT")
 			trig_Ele50PFJet165 = getattr(event, "HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet165")

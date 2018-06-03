@@ -273,7 +273,9 @@ class susysinglelep(Module):
 		self.out.branch("iso_MT2","F");
 		self.out.branch("iso_Veto","O");
 		self.out.branch("nLepGood","F");
-		self.out.branch("nLepOther","F")
+		self.out.branch("nLepOther","F");
+		self.out.branch("LepGood_Cutbased","I");
+		self.out.branch("LepOther_Cutbased","I");
        # Store the Xsec 
 		self.out.branch("Xsec",  "F");
 		self.xs = getXsec(inputFile.GetName())
@@ -327,7 +329,7 @@ class susysinglelep(Module):
 		
 		# make loose leptons (basic selection)
 		for mu in inclusiveMuons :
-				if (mu.pt > 10 and abs(mu.eta) < 2.4 and mu.miniPFRelIso_all < 0.4 and abs(mu.dxy)<0.05 and abs(mu.dz)<0.5):
+				if (mu.pt > 10 and abs(mu.eta) < 2.4 and mu.miniPFRelIso_all < 0.4 and mu.isPFcand and abs(mu.dxy)<0.05 and abs(mu.dz)<0.5):
 					event.selectedLeptons.append(mu)
 					event.selectedMuons.append(mu)
 				else:
@@ -336,12 +338,14 @@ class susysinglelep(Module):
 		for ele in inclusiveElectrons :
 			ele.looseIdOnly = ele.cutBased >=1
 			if (ele.looseIdOnly and
-						ele.pt>10 and abs(ele.eta)<2.4 and ele.miniPFRelIso_all < 0.4 and ele.convVeto == 1 and # and abs(ele.dxy)<0.05 and abs(ele.dz)<0.5  and ele.lostHits <=1.0 and 
+						ele.pt>10 and abs(ele.eta)<2.4 and ele.miniPFRelIso_all < 0.4 and ele.isPFcand and ele.convVeto and # and abs(ele.dxy)<0.05 and abs(ele.dz)<0.5  and ele.lostHits <=1.0 and 
 						(bestMatch(ele, looseMuons)[1] > (0.05**2))):
 					event.selectedLeptons.append(ele)
 					event.selectedElectrons.append(ele)
+					self.out.fillBranch("LepGood_Cutbased",ele.cutBased)
 			else:
 					event.otherLeptons.append(ele)
+					self.out.fillBranch("LepOther_Cutbased",ele.cutBased)
 		
 		event.otherLeptons.sort(key = lambda l : l.pt, reverse = True)
 		event.selectedLeptons.sort(key = lambda l : l.pt, reverse = True)
@@ -353,6 +357,8 @@ class susysinglelep(Module):
 		LepOther = [l for l in event.otherLeptons]
 		self.out.fillBranch("nLepGood",len(goodLep))
 		self.out.fillBranch("nLepOther",len(LepOther))
+		
+		
 		'''Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
 		Mus = [x for x in muons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.miniPFRelIso_all < 0.4  ]
 		Elec_Other = [x for x in electrons if x not in set(Elecs) and abs(x.eta) < 2.4 if x.cutBased>=1]
@@ -679,14 +685,14 @@ class susysinglelep(Module):
 			Genmetp4.SetPtEtaPhiM(genmet.pt,0,genmet.phi,0)
 		self.out.fillBranch("MET", metp4.Pt())
 		Jets = Collection(event, "Jet")
-		jets = [j for j in Jets if j.pt >= 20 and abs(j.eta) < 2.4 ]
+		jets = [j for j in Jets if j.pt > 20 and abs(j.eta) < 2.4]
 		njet = len(jets)
 		( met_px, met_py ) = ( met.pt*math.cos(met.phi), met.pt*math.sin(met.phi) )
 		( met_px_nom, met_py_nom ) = ( met_px, met_py )
 		# match reconstructed jets to generator level ones
 		# (needed to evaluate JER scale factors and uncertainties)
 		
-		if self.isMC == True or self.isSig == True:
+		'''if self.isMC == True or self.isSig == True:
 			rho = getattr(event,"fixedGridRhoFastjetAll")
 			genJets = Collection(event, "GenJet" )
 			pairs = matchObjectCollection(Jets, genJets)
@@ -704,7 +710,7 @@ class susysinglelep(Module):
 						met_phi_nom = math.atan2(met_py_nom, met_px_nom)
 						met.pt = met_pt_nom
 						met.phi = met_phi_nom
-					jet.pt = jet_pt_nom
+					jet.pt = jet_pt_nom'''
 		metp4.SetPtEtaPhiM(met.pt,0.,met.phi,0.) # only use met vector to derive transverse quantities)		
 		centralJet30 = []; centralJet30idx = []
 		centralJet40 = []
@@ -713,6 +719,7 @@ class susysinglelep(Module):
 		# fill this flage but defults to 1 and then change it after the proper selection 
 		self.out.fillBranch("Flag_fastSimCorridorJetCleaning", 1)
 		for i,j in enumerate(jets):
+
 			# Cleaning up of fastsim jets (from "corridor" studies) https://twiki.cern.ch/twiki/bin/viewauth/CMS/SUSRecommendationsMoriond17#Cleaning_up_of_fastsim_jets_from
 			if self.isSig: #only check for signals (see condition check above)
 				self.out.fillBranch("isDPhiSignal",1) 
@@ -747,18 +754,28 @@ class susysinglelep(Module):
 		# Do cleaning a la CMG: clean max 1 jet for each lepton (the nearest)
 		cJet30Clean = centralJet30
 		cleanJets30 = centralJet30
-		for lep in tightLeps:
-			# don't clean LepGood, only LepOther
-			if lep not in otherleps: continue
-		
+		#clean selected leptons at First 
+		for lep in goodLep:
+			if lep.pt < 20 : continue 
 			jNear, dRmin = None, 99
 			# find nearest jet
 			for jet in centralJet30:
-		
 				dR = jet.p4().DeltaR(lep.p4())
 				if dR < dRmin:
 					jNear, dRmin = jet, dR
-		
+			# remove nearest jet
+			if dRmin < dRminCut:
+				cJet30Clean.remove(jNear)
+		#then clean other tight leptons 
+		for lep in tightLeps:
+			# don't clean LepGood, only LepOther
+			if lep not in otherleps: continue
+			jNear, dRmin = None, 99
+			# find nearest jet
+			for jet in centralJet30:
+				dR = jet.p4().DeltaR(lep.p4())
+				if dR < dRmin:
+					jNear, dRmin = jet, dR
 			# remove nearest jet
 			if dRmin < dRminCut:
 				cJet30Clean.remove(jNear)
@@ -767,7 +784,6 @@ class susysinglelep(Module):
 				if dR < dRmin:
 					cleanJets.append(jet25)
 					cleanJetsidx.append(ijet)
-					
 		#if nJetC !=  len(cJet30Clean) and False:
 		#	print "Non-clean jets: ", nJetC, "\tclean jets:", len(cJet30Clean)
 		#	print jets
