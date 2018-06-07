@@ -692,7 +692,7 @@ class susysinglelep(Module):
 		# match reconstructed jets to generator level ones
 		# (needed to evaluate JER scale factors and uncertainties)
 		
-		if self.isMC == True or self.isSig == True:
+		if self.isMC :
 			rho = getattr(event,"fixedGridRhoFastjetAll")
 			genJets = Collection(event, "GenJet" )
 			pairs = matchObjectCollection(Jets, genJets)
@@ -719,11 +719,12 @@ class susysinglelep(Module):
 		# fill this flage but defults to 1 and then change it after the proper selection 
 		self.out.fillBranch("Flag_fastSimCorridorJetCleaning", 1)
 		for i,j in enumerate(jets):
-
 			# Cleaning up of fastsim jets (from "corridor" studies) https://twiki.cern.ch/twiki/bin/viewauth/CMS/SUSRecommendationsMoriond17#Cleaning_up_of_fastsim_jets_from
 			if self.isSig: #only check for signals (see condition check above)
 				self.out.fillBranch("isDPhiSignal",1) 
-				if j.pt>20 and abs(j.eta)<2.5 and pairs[j].pt == 0 and j.chHEF<0.1:	self.out.fillBranch("Flag_fastSimCorridorJetCleaning", 0  )
+				genj = pairs[j]
+				if genj is not None : 
+					if j.pt>20 and abs(j.eta)<2.5 and (genj.pt == 0) and j.chHEF<0.1:	self.out.fillBranch("Flag_fastSimCorridorJetCleaning", 0  )
 			if j.pt>25 :
 				cleanJets25.append(j)
 				cleanJets25idx.append(j)
