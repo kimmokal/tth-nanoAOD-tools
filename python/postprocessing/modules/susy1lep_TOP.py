@@ -12,7 +12,7 @@ import itertools
 from PhysicsTools.NanoAODTools.postprocessing.tools import matchObjectCollection, matchObjectCollectionMultiple
 
 from ROOT import TLorentzVector, TVector2, std
-
+from deltar import bestMatch
 #################
 ### Cuts and WP
 #################
@@ -230,34 +230,58 @@ class susyTOP(Module):
         pass
     def analyze(self, event):
 		"""process event, return True (go to next module) or False (fail, go to next event)"""
-		electrons = Collection(event, "Electron")
-		muons = Collection(event, "Muon")
+		allelectrons = Collection(event, "Electron")
+		allmuons = Collection(event, "Muon")
 		Jets = Collection(event, "Jet")
 		met = Object(event, "MET")
 		genmet = Object(event, "GenMET")
 		# for all leptons (veto or tight)
-		Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
-		Mus = [x for x in muons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.miniPFRelIso_all < 0.4  ]
-		Elec_Other = [x for x in electrons if x not in set(Elecs) and abs(x.eta) < 2.4 if x.cutBased>=1]
-		Mus_Other = [x for x in muons if  x not in set(Mus) and abs(x.eta) < 2.4 ]
-		goodLep = [i for i in itertools.chain(Mus, Elecs)]
-		LepOther = [i for i in itertools.chain(Mus_Other, Elec_Other)]
-		# Clean good leptons and otherleptons 
-		for Mu in goodLep :
-			if abs(Mu.pdgId) == 13 :
-				for El in goodLep :
-					if abs(El.pdgId) == 11 : 
-						if Mu.p4().DeltaR(El.p4()) < 0.05 :
-							#print "overlap fonded remove Electron"
-							goodLep.remove(El)
-		for Mu in LepOther :
-			if abs(Mu.pdgId) == 13 :
-				for El in LepOther :
-					if abs(El.pdgId) == 11 : 
-						if Mu.p4().DeltaR(El.p4()) < 0.05 :
-							#print "overlap fonded remove Electron"
-							LepOther.remove(El)
-				
+		
+		### inclusive leptons = all leptons that could be considered somewhere in the analysis, with minimal requirements (used e.g. to match to MC)
+		event.inclusiveLeptons = []
+		### selected leptons = subset of inclusive leptons passing some basic id definition and pt requirement
+		### other    leptons = subset of inclusive leptons failing some basic id definition and pt requirement
+		event.selectedLeptons = []
+		event.selectedMuons = []
+		event.selectedElectrons = []
+		event.otherLeptons = []
+		inclusiveMuons = []
+		inclusiveElectrons = []
+		for mu in allmuons:
+			if (mu.pt>10 and abs(mu.eta)<2.4 and
+					abs(mu.dxy)<0.5 and abs(mu.dz)<1.):
+				inclusiveMuons.append(mu)
+		for ele in allelectrons:
+			if ( ele.cutBased >=1 and
+					ele.pt>10 and abs(ele.eta)<2.4):# and abs(ele.dxy)<0.5 and abs(ele.dz)<1. and ele.lostHits <=1.0):
+				inclusiveElectrons.append(ele)
+		event.inclusiveLeptons = inclusiveMuons + inclusiveElectrons
+		
+		# make loose leptons (basic selection)
+		for mu in inclusiveMuons :
+				if (mu.pt > 10 and abs(mu.eta) < 2.4 and mu.miniPFRelIso_all < 0.4 and mu.isPFcand and abs(mu.dxy)<0.05 and abs(mu.dz)<0.5):
+					event.selectedLeptons.append(mu)
+					event.selectedMuons.append(mu)
+				else:
+					event.otherLeptons.append(mu)
+		looseMuons = event.selectedLeptons[:]
+		for ele in inclusiveElectrons :
+			ele.looseIdOnly = ele.cutBased >=1
+			if (ele.looseIdOnly and
+						ele.pt>10 and abs(ele.eta)<2.4 and ele.miniPFRelIso_all < 0.4 and ele.isPFcand and ele.convVeto and # and abs(ele.dxy)<0.05 and abs(ele.dz)<0.5  and ele.lostHits <=1.0 and 
+						(bestMatch(ele, looseMuons)[1] > (0.05**2))):
+					event.selectedLeptons.append(ele)
+					event.selectedElectrons.append(ele)
+			else:
+					event.otherLeptons.append(ele)		
+		event.otherLeptons.sort(key = lambda l : l.pt, reverse = True)
+		event.selectedLeptons.sort(key = lambda l : l.pt, reverse = True)
+		event.selectedMuons.sort(key = lambda l : l.pt, reverse = True)
+		event.selectedElectrons.sort(key = lambda l : l.pt, reverse = True)
+		event.inclusiveLeptons.sort(key = lambda l : l.pt, reverse = True)		
+		
+		goodLep = [l for l in event.selectedLeptons]
+		LepOther = [l for l in event.otherLeptons]				
 		#LepOther = goodLep
 		leps = goodLep 
 		nlep = len(leps)		
@@ -503,9 +527,8 @@ class susyTOP(Module):
 		metp4 = ROOT.TLorentzVector(0,0,0,0)
 		Genmetp4 = ROOT.TLorentzVector(0,0,0,0)
 		
-		if self.isMC:
+		if self.isMC or self.isSig:
 			Genmetp4.SetPtEtaPhiM(genmet.pt,0,genmet.phi,0)
-		self.out.fillBranch("MET", metp4.Pt())
 		Jets = Collection(event, "Jet")
 		jets = [j for j in Jets if j.pt >= 20 and abs(j.eta) < 2.4 ]
 		njet = len(jets)
@@ -514,7 +537,7 @@ class susyTOP(Module):
 		# match reconstructed jets to generator level ones
 		# (needed to evaluate JER scale factors and uncertainties)
 		
-		if self.isMC :
+		if self.isMC or self.isSig:
 			rho = getattr(event,"fixedGridRhoFastjetAll")
 			genJets = Collection(event, "GenJet" )
 			pairs = matchObjectCollection(Jets, genJets)

@@ -223,8 +223,8 @@ class susy1lepSig(Module):
 		nISRweightsyst_down =  C_ISR_down * (ISRweights[nISRforWeights] - ISRweightssyst[nISRforWeights])
 		
 		self.out.fillBranch("nISRweight",nISRweight)
-		self.out.fillBranch("nISRttweightsyst_up",nISRweightsyst_up)
-		self.out.fillBranch("nISRttweightsyst_down",nISRweightsyst_down)
+		self.out.fillBranch("nISRweightsyst_up",nISRweightsyst_up)
+		self.out.fillBranch("nISRweightsyst_down",nISRweightsyst_down)
 		##############
 		if (mGo,mLSP) in cntsSusy:
 			#ret['totalNgen'] = cntsSusy[(mGo,mLSP)][0] # merged scan: 93743963

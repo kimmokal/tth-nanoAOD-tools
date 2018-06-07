@@ -6,7 +6,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection 
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 import itertools
-
+from deltar import bestMatch
 
 
 #################
@@ -174,25 +174,66 @@ class lepSFProducer(Module):
 		pass
 	def analyze(self, event):
 		"""process event, return True (go to next module) or False (fail, go to next event)"""
-		electrons = Collection(event, "Electron")
-		muons = Collection(event, "Muon")
-		goodLep = []
-		Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
-		Mus = [x for x in muons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.miniPFRelIso_all < 0.4  ]
-		goodLep = [i for i in itertools.chain(Mus, Elecs)]
-		# Clean good leptons and otherleptons 
-		for Mu in goodLep :
-			if abs(Mu.pdgId) == 13 :
-				for El in goodLep :
-					if abs(El.pdgId) == 11 : 
-						if Mu.p4().DeltaR(El.p4()) < 0.05 :
-							#print "overlap fonded remove Electron"
-							goodLep.remove(El)
-				
+		allelectrons = Collection(event, "Electron")
+		allmuons = Collection(event, "Muon")
+		# for all leptons (veto or tight)
+		
+		### inclusive leptons = all leptons that could be considered somewhere in the analysis, with minimal requirements (used e.g. to match to MC)
+		event.inclusiveLeptons = []
+		### selected leptons = subset of inclusive leptons passing some basic id definition and pt requirement
+		### other    leptons = subset of inclusive leptons failing some basic id definition and pt requirement
+		event.selectedLeptons = []
+		event.selectedMuons = []
+		event.selectedElectrons = []
+		event.otherLeptons = []
+		inclusiveMuons = []
+		inclusiveElectrons = []
+		for mu in allmuons:
+			if (mu.pt>10 and abs(mu.eta)<2.4 and
+					abs(mu.dxy)<0.5 and abs(mu.dz)<1.):
+				inclusiveMuons.append(mu)
+		for ele in allelectrons:
+			if ( ele.cutBased >=1 and
+					ele.pt>10 and abs(ele.eta)<2.4):# and abs(ele.dxy)<0.5 and abs(ele.dz)<1. and ele.lostHits <=1.0):
+				inclusiveElectrons.append(ele)
+		event.inclusiveLeptons = inclusiveMuons + inclusiveElectrons
+		
+		# make loose leptons (basic selection)
+		for mu in inclusiveMuons :
+				if (mu.pt > 10 and abs(mu.eta) < 2.4 and mu.miniPFRelIso_all < 0.4 and mu.isPFcand and abs(mu.dxy)<0.05 and abs(mu.dz)<0.5):
+					event.selectedLeptons.append(mu)
+					event.selectedMuons.append(mu)
+				else:
+					event.otherLeptons.append(mu)
+		looseMuons = event.selectedLeptons[:]
+		for ele in inclusiveElectrons :
+			ele.looseIdOnly = ele.cutBased >=1
+			if (ele.looseIdOnly and
+						ele.pt>10 and abs(ele.eta)<2.4 and ele.miniPFRelIso_all < 0.4 and ele.isPFcand and ele.convVeto and # and abs(ele.dxy)<0.05 and abs(ele.dz)<0.5  and ele.lostHits <=1.0 and 
+						(bestMatch(ele, looseMuons)[1] > (0.05**2))):
+					event.selectedLeptons.append(ele)
+					event.selectedElectrons.append(ele)
+			else:
+					event.otherLeptons.append(ele)		
+		event.otherLeptons.sort(key = lambda l : l.pt, reverse = True)
+		event.selectedLeptons.sort(key = lambda l : l.pt, reverse = True)
+		event.selectedMuons.sort(key = lambda l : l.pt, reverse = True)
+		event.selectedElectrons.sort(key = lambda l : l.pt, reverse = True)
+		event.inclusiveLeptons.sort(key = lambda l : l.pt, reverse = True)		
+		
+		goodLep = [l for l in event.selectedLeptons]
+		LepOther = [l for l in event.otherLeptons]				
 		leps = goodLep 
 		nlep = len(leps)		
 		# selected good leptons
 		selectedTightLeps = []
+		selectedTightLepsIdx = []
+		selectedVetoLeps = []
+
+        # anti-selected leptons
+		antiTightLeps = []
+		antiTightLepsIdx = []
+		antiVetoLeps = []
 		for idx,lep in enumerate(leps):
 			# for acceptance check
 			lepEta = abs(lep.eta)
@@ -257,6 +298,69 @@ class lepSFProducer(Module):
 					# fill
 					if passIso and passConv and passPostICHEPHLTHOverE:
 						selectedTightLeps.append(lep)
+		otherleps = [l for l in LepOther]#(set(selectedTightLeps) or set(selectedVetoLeps) or set(antiTightLeps) or set(antiVetoLeps) )]
+		nLepOther = len(otherleps)
+		for idx,lep in enumerate(otherleps):
+			# check acceptance
+			lepEta = abs(lep.eta)
+			if lepEta > 2.4: continue
+			# Pt cut
+			if lep.pt < 10: continue
+			# Iso cut -- to be compatible with the trigger
+			if lep.miniPFRelIso_all > trig_miniIsoCut: continue
+		
+			############
+			# Muons
+			if(abs(lep.pdgId) == 13):
+				## Lower ID is POG_LOOSE (see cfg)
+		
+				# ID, IP and Iso check:
+				passIso = lep.miniPFRelIso_all > muo_miniIsoCut
+				#if passIso and passID and passIP:
+				if passIso:
+					antiTightLeps.append(lep)
+					antiTightLepsIdx.append(idx)
+				else:
+					antiVetoLeps.append(lep)
+		
+			############
+			# Electrons
+			elif(abs(lep.pdgId) == 11):
+		
+				if(lepEta > eleEta): continue
+		
+				## Iso selection: ele should have MiniIso < 0.4 (for trigger)
+				if lep.miniPFRelIso_all > Lep_miniIsoCut: continue
+		
+				## Set Ele IDs
+				if eleID == 'CB':
+					# ELE CutBased ID
+					eidCB = lep.cutBased
+		
+					passMediumID = (eidCB >= 3)# and lep.convVeto and abs(lep.dxy) < 0.05 and abs(lep.dz) < 0.1)
+					passVetoID = (eidCB >= 1 )#and lep.convVeto and abs(lep.dxy) < 0.05 and abs(lep.dz) < 0.1)
+				else:
+					passMediumID = False
+					passVetoID = False
+		
+				# Cuts for Anti-selected electrons
+				if not passMediumID:
+					# should always be true for LepOther
+		
+					# other checks
+					passOther = False
+					if hasattr(lep,"hoe"):
+						passOther = lep.hoe > 0.01
+		
+					#if not lep.conVeto:
+					if passOther:
+						antiTightLeps.append(lep)
+						antiTightLepsIdx.append(idx);
+					else:
+						antiVetoLeps.append(lep)
+		
+				elif passVetoID: #all Medium+ eles in LepOther
+					antiVetoLeps.append(lep)
 
 		# Fill SFs only for tight leptons 
 		if len(selectedTightLeps) > 0:

@@ -78,7 +78,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Runs a NAF batch system for nanoAOD', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument('dataList', help='List of datasets to process', metavar='datasets.txt')
 	parser.add_argument('--out', help='out put directory',default=None, metavar='Dir')
-	parser.add_argument('--site', help='Site DESY or Bari',default=None, metavar='Site')
+	parser.add_argument('--site', help='Site DESY or Bari',default=None, metavar='site')
 	args = parser.parse_args()
 	listtxt = open(args.dataList,"r")
 	if args.site == "DESY":

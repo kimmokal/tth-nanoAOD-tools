@@ -12,10 +12,16 @@ import commands
 import subprocess
 import shutil
 from ROOT import TFile
-workarea = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src'
-exearea = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch'
+workarea_d = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src'
+exearea_d = '/nfs/dust/cms/user/amohamed/susy-desy/nanoAOD/pureNANOAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch'
+
+workarea_b = '/lustre/home/amohamed/susy-desy/nanoAOD/CMSSW_9_4_4/src'
+exearea_b = '/lustre/home/amohamed/susy-desy/nanoAOD/CMSSW_9_4_4/src/tthAnalysis/NanoAODTools/batch'
+
+
 condTEMP = './templates_merging/submit.condor'
 wrapTEMP = './templates_merging/wrapnanoPost.sh'
+
 
 if  os.path.exists('submit_MERGE_HTC.sh'):
    os.remove('submit_MERGE_HTC.sh')
@@ -34,8 +40,16 @@ if __name__ == '__main__':
 	parser.add_argument('--indir', help='List of datasets to process', metavar='indir')
 	parser.add_argument('--outdir', help='output directory',default=None, metavar='outdir')
 	parser.add_argument('--batchMode', '-b', help="Batch mode.", action='store_true')
+	parser.add_argument('--site', help='Which site to submit DESY or Bari', metavar='site')
 	args = parser.parse_args()
 	
+	if args.site == "DESY": 
+		workarea = workarea_d
+		exearea = exearea_d
+	elif args.site == "Bari": 
+		workarea = workarea_b
+		exearea = exearea_b
+			
 	indire = args.indir
 	outdire = args.outdir
 	
@@ -52,7 +66,7 @@ if __name__ == '__main__':
 	subdires = [f for f in listdir(indire) ]
 	for subdir in subdires:
 		if subdir.startswith('.'):  continue
-		rootfiles = find_all_matching('root',indire+subdir)
+		rootfiles = find_all_matching('.root',indire+subdir)
 		to_merge=''
 		for rf in rootfiles:
 			f = TFile(rf,'READ')
@@ -83,7 +97,10 @@ if __name__ == '__main__':
 			f2.close()
 			file = open('submit_MERGE_HTC.sh','a')
 			file.write("\n")
-			file.write("condor_submit "+outdire+'/'+subdir+"/Condor.submit")
+			if args.site == "DESY":
+				file.write("condor_submit "+outdire+'/'+subdir+"/Condor.submit")
+			elif args.site == "Bari" : 
+				file.write("condor_submit -name ettore "+outdire+'/'+subdir+"/Condor.submit")
 			file.close()		
 	os.system('chmod a+x submit_MERGE_HTC.sh')
 	print 'merging done OR READY FOR BATCH'

@@ -692,7 +692,7 @@ class susysinglelep(Module):
 		# match reconstructed jets to generator level ones
 		# (needed to evaluate JER scale factors and uncertainties)
 		
-		'''if self.isMC == True or self.isSig == True:
+		if self.isMC == True or self.isSig == True:
 			rho = getattr(event,"fixedGridRhoFastjetAll")
 			genJets = Collection(event, "GenJet" )
 			pairs = matchObjectCollection(Jets, genJets)
@@ -710,8 +710,8 @@ class susysinglelep(Module):
 						met_phi_nom = math.atan2(met_py_nom, met_px_nom)
 						met.pt = met_pt_nom
 						met.phi = met_phi_nom
-					jet.pt = jet_pt_nom'''
-		metp4.SetPtEtaPhiM(met.pt,0.,met.phi,0.) # only use met vector to derive transverse quantities)		
+					jet.pt = jet_pt_nom
+		metp4.SetPtEtaPhiM(met.pt,0.,met.phi,0.) # only use met vector to derive transverse quantities)	
 		centralJet30 = []; centralJet30idx = []
 		centralJet40 = []
 		cleanJets25 = []; cleanJets25idx = [] 
