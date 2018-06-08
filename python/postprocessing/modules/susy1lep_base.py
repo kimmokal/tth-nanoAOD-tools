@@ -211,7 +211,6 @@ class susysinglelep(Module):
             # second leading lepton
 		self.out.branch("Lep2_pt","F");
 		self.out.branch("Selected2","I");
-		self.out.branch("MET","F");				
 		self.out.branch("LT","F");
 		self.out.branch("ST","F");
 		self.out.branch("MT","F");
