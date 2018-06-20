@@ -69,9 +69,9 @@ def moduletorun(sample):
 		if era == 2017 : modu+=",jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,susy_lepSF,susy_1l_Sig17,countHistogramAll_2017"
 	else :
 		if era == 2016 : 
-			modu = "susy1lepdata,susy_1l_Trigg2016,susy_1l_FiltersData,susy1lepTOPData"
+			modu = "susy1lepdata,susy_1l_Trigg2016,susy_1l_FiltersData,susy1lepTOPData -J $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/JSONS/Cert_271036-284044_13TeV_PromptReco_Collisions16_JSON.txt"
 		elif era == 2017:
-			modu = "susy1lepdata,susy_1l_Trigg2017,susy_1l_FiltersData,susy1lepTOPData"
+			modu = "susy1lepdata,susy_1l_Trigg2017,susy_1l_FiltersData,susy1lepTOPData -J $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/JSONS/Cert_294927-306462_13TeV_PromptReco_Collisions17_JSON.txt"
 	return modu
 
 if __name__ == '__main__':
