@@ -115,7 +115,7 @@ class GenPartAux:
   def __repr__(self):
     return self.__str__()
 
-  def chechIf(self, condition):
+  def checkIf(self, condition):
     assert(condition in statusFlagsMap)
     return (self.statusFlags & (1 << statusFlagsMap[condition]) != 0)
 
@@ -149,13 +149,22 @@ def genLeptonSelection(genParticles):
 def genPromptLeptonSelection(genParticles):
   return filter(
     lambda genLepton:
-      genLepton.chechIf('isLastCopy') and
-      not genLepton.chechIf('isDirectHadronDecayProduct') and
+      genLepton.checkIf('isLastCopy') and
+      not genLepton.checkIf('isDirectHadronDecayProduct') and
       (
-        genLepton.chechIf('isPrompt') or
-        genLepton.chechIf('isDirectPromptTauDecayProduct')
+        genLepton.checkIf('isPrompt') or
+        genLepton.checkIf('isDirectPromptTauDecayProduct')
       ),
     genLeptonSelection(genParticles)
+  )
+
+def genPhotonSelection(genParticles):
+  return filter(lambda genPart: genPart.pdgId == 22, genParticles)
+
+def genPromptPhotonSelection(genParticles):
+  return filter(
+    lambda genPart: genPart.status == 1 and genPart.checkIf('isPrompt'),
+    genPhotonSelection(genParticles)
   )
 
 def genHiggsSelection(genParticles):
@@ -560,6 +569,8 @@ class genParticleProducer(Module):
 
 genLeptonEntry                      = ("GenLep",                         genPromptLeptonSelection)
 genLeptonAllEntry                   = ("GenLepAll",                      genLeptonSelection)
+genPromptPhotonEntry                = ("GenPhoton",                      genPromptPhotonSelection)
+genPhotonAllEntry                   = ("GenPhotonAll",                   genPhotonSelection)
 genHiggsEntry                       = ("GenHiggs",                       genHiggsSelection)
 genHiggsDaughtersEntry              = ("GenHiggsDaughters",              genHiggsDaughtersSelection)
 genNuEntry                          = ("GenNu",                          genNuSelection)
@@ -587,6 +598,8 @@ genBQuarkFromTopEntry               = ("GenBQuarkFromTop",               (lambda
 # provide these variables as the 2nd arguments to the import option for the nano_postproc.py script
 genLepton                      = lambda : genParticleProducer(dict([genLeptonEntry]))                      # all prompt stable leptons
 genLeptonAll                   = lambda : genParticleProducer(dict([genLeptonAllEntry]))                   # all stable leptons
+genPromptPhoton                = lambda : genParticleProducer(dict([genPromptPhotonEntry]))                # stable prompt photons
+genPhotonAll                   = lambda : genParticleProducer(dict([genPhotonAllEntry]))                   # all photons
 genHiggs                       = lambda : genParticleProducer(dict([genHiggsEntry]))                       # all Higgs (first in the decay chain)
 genHiggsDaughters              = lambda : genParticleProducer(dict([genHiggsDaughtersEntry]))              # all Higgs daughters
 genTau                         = lambda : genParticleProducer(dict([genTauEntry]))                         # all taus
@@ -614,6 +627,8 @@ genBQuarkFromTop               = lambda : genParticleProducer(dict([genBQuarkFro
 genAll = lambda : genParticleProducer(dict([
     genLeptonEntry,
     genLeptonAllEntry,
+    genPromptPhotonEntry,
+    genPhotonAllEntry,
     genHiggsEntry,
     genHiggsDaughtersEntry,
     genNuEntry,
