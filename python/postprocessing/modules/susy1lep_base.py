@@ -322,13 +322,13 @@ class susysinglelep(Module):
 				inclusiveMuons.append(mu)
 		for ele in allelectrons:
 			if ( ele.cutBased >=1 and
-					ele.pt>10 and abs(ele.eta)<2.4):# and abs(ele.dxy)<0.5 and abs(ele.dz)<1. and ele.lostHits <=1.0):
+					ele.pt>10 and abs(ele.eta)<2.4 ):#and abs(ele.dxy)<0.5 and abs(ele.dz)<1. and ele.lostHits <=1.0) :
 				inclusiveElectrons.append(ele)
 		event.inclusiveLeptons = inclusiveMuons + inclusiveElectrons
 		
 		# make loose leptons (basic selection)
 		for mu in inclusiveMuons :
-				if (mu.pt > 10 and abs(mu.eta) < 2.4 and mu.miniPFRelIso_all < 0.4 and mu.isPFcand and abs(mu.dxy)<0.05 and abs(mu.dz)<0.5):
+				if (mu.pt > 10 and abs(mu.eta) < 2.4 and mu.miniPFRelIso_all < 0.4 and mu.isPFcand and abs(mu.dxy)<0.05 and abs(mu.dz)<1):
 					event.selectedLeptons.append(mu)
 					event.selectedMuons.append(mu)
 				else:
@@ -337,15 +337,12 @@ class susysinglelep(Module):
 		for ele in inclusiveElectrons :
 			ele.looseIdOnly = ele.cutBased >=1
 			if (ele.looseIdOnly and
-						ele.pt>10 and abs(ele.eta)<2.4 and ele.miniPFRelIso_all < 0.4 and ele.isPFcand and ele.convVeto and # and abs(ele.dxy)<0.05 and abs(ele.dz)<0.5  and ele.lostHits <=1.0 and 
+						ele.pt>10 and abs(ele.eta)<2.4 and ele.miniPFRelIso_all < 0.4 and ele.isPFcand and #ele.convVeto and abs(ele.dxy)<0.05 and abs(ele.dz)<0.5  and ele.lostHits <=1.0 and 
 						(bestMatch(ele, looseMuons)[1] > (0.05**2))):
 					event.selectedLeptons.append(ele)
 					event.selectedElectrons.append(ele)
-					self.out.fillBranch("LepGood_Cutbased",ele.cutBased)
 			else:
 					event.otherLeptons.append(ele)
-					self.out.fillBranch("LepOther_Cutbased",ele.cutBased)
-		
 		event.otherLeptons.sort(key = lambda l : l.pt, reverse = True)
 		event.selectedLeptons.sort(key = lambda l : l.pt, reverse = True)
 		event.selectedMuons.sort(key = lambda l : l.pt, reverse = True)
@@ -356,7 +353,7 @@ class susysinglelep(Module):
 		LepOther = [l for l in event.otherLeptons]
 		self.out.fillBranch("nLepGood",len(goodLep))
 		self.out.fillBranch("nLepOther",len(LepOther))
-		
+	
 		
 		'''Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
 		Mus = [x for x in muons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.miniPFRelIso_all < 0.4  ]
@@ -682,7 +679,7 @@ class susysinglelep(Module):
 		
 		if self.isMC:
 			Genmetp4.SetPtEtaPhiM(genmet.pt,0,genmet.phi,0)
-		self.out.fillBranch("MET", metp4.Pt())
+		#self.out.fillBranch("MET", metp4.Pt())
 		Jets = Collection(event, "Jet")
 		jets = [j for j in Jets if j.pt > 20 and abs(j.eta) < 2.4]
 		njet = len(jets)
@@ -691,7 +688,7 @@ class susysinglelep(Module):
 		# match reconstructed jets to generator level ones
 		# (needed to evaluate JER scale factors and uncertainties)
 		
-		if self.isMC :
+		'''if self.isMC :
 			rho = getattr(event,"fixedGridRhoFastjetAll")
 			genJets = Collection(event, "GenJet" )
 			pairs = matchObjectCollection(Jets, genJets)
@@ -709,7 +706,7 @@ class susysinglelep(Module):
 						met_phi_nom = math.atan2(met_py_nom, met_px_nom)
 						met.pt = met_pt_nom
 						met.phi = met_phi_nom
-					jet.pt = jet_pt_nom
+					jet.pt = jet_pt_nom'''
 		metp4.SetPtEtaPhiM(met.pt,0.,met.phi,0.) # only use met vector to derive transverse quantities)	
 		centralJet30 = []; centralJet30idx = []
 		centralJet40 = []
@@ -755,7 +752,7 @@ class susysinglelep(Module):
 		cJet30Clean = centralJet30
 		cleanJets30 = centralJet30
 		#clean selected leptons at First 
-		for lep in goodLep:
+		'''for lep in goodLep:
 			if lep.pt < 20 : continue 
 			jNear, dRmin = None, 99
 			# find nearest jet
@@ -765,11 +762,11 @@ class susysinglelep(Module):
 					jNear, dRmin = jet, dR
 			# remove nearest jet
 			if dRmin < dRminCut:
-				cJet30Clean.remove(jNear)
+				cJet30Clean.remove(jNear)'''
 		#then clean other tight leptons 
 		for lep in tightLeps:
 			# don't clean LepGood, only LepOther
-			if lep not in otherleps: continue
+			#if lep not in otherleps: continue
 			jNear, dRmin = None, 99
 			# find nearest jet
 			for jet in centralJet30:
