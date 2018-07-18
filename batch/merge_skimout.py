@@ -98,7 +98,7 @@ if __name__ == '__main__':
 			file = open('submit_MERGE_HTC.sh','a')
 			file.write("\n")
 			if args.site == "DESY":
-				file.write("condor_submit "+outdire+'/'+subdir+"/Condor.submit")
+				file.write("condor_submit -name s02 "+outdire+'/'+subdir+"/Condor.submit")
 			elif args.site == "Bari" : 
 				file.write("condor_submit -name ettore "+outdire+'/'+subdir+"/Condor.submit")
 			file.close()		

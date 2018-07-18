@@ -177,7 +177,7 @@ if __name__ == '__main__':
 			file = open('submit_all_to_batch_HTC.sh','a')
 			file.write("\n")
 			if args.site == "DESY" : 
-				file.write("condor_submit "+dirname+"/Condor"+textname+str(i)+".submit")
+				file.write("condor_submit -name s02 "+dirname+"/Condor"+textname+str(i)+".submit")
 			elif args.site == "Bari" :
 				file.write("condor_submit -name ettore "+dirname+"/Condor"+textname+str(i)+".submit")
 			file.close() 
