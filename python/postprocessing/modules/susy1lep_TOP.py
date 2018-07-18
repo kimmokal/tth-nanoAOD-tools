@@ -527,7 +527,7 @@ class susyTOP(Module):
 		metp4 = ROOT.TLorentzVector(0,0,0,0)
 		Genmetp4 = ROOT.TLorentzVector(0,0,0,0)
 		
-		if self.isMC or self.isSig:
+		if self.isMC :
 			Genmetp4.SetPtEtaPhiM(genmet.pt,0,genmet.phi,0)
 		Jets = Collection(event, "Jet")
 		jets = [j for j in Jets if j.pt >= 20 and abs(j.eta) < 2.4 ]
@@ -537,7 +537,7 @@ class susyTOP(Module):
 		# match reconstructed jets to generator level ones
 		# (needed to evaluate JER scale factors and uncertainties)
 		
-		if self.isMC or self.isSig:
+		if self.isMC:
 			rho = getattr(event,"fixedGridRhoFastjetAll")
 			genJets = Collection(event, "GenJet" )
 			pairs = matchObjectCollection(Jets, genJets)

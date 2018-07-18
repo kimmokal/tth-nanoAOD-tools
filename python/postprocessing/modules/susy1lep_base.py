@@ -281,6 +281,11 @@ class susysinglelep(Module):
 		self.filename = inputFile.GetName()
 		print inputFile.GetName()
 		print self.xs
+		if self.isMC : 
+			self.out.branch('HLT_EleOR',"O");
+			self.out.branch('HLT_MuOR',"O");
+			self.out.branch('HLT_LepOR',"O");
+			self.out.branch('HLT_MetOR',"O");
 		
 	def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
 		pass
@@ -688,13 +693,13 @@ class susysinglelep(Module):
 		# match reconstructed jets to generator level ones
 		# (needed to evaluate JER scale factors and uncertainties)
 		
-		'''if self.isMC :
+		if self.isMC :
 			rho = getattr(event,"fixedGridRhoFastjetAll")
 			genJets = Collection(event, "GenJet" )
 			pairs = matchObjectCollection(Jets, genJets)
 			for jet in jets:
 				genJet = pairs[jet]
-				if smearJER==True :
+				'''if smearJER==True :
 					(jet_pt_jerNomVal, jet_pt_jerUpVal, jet_pt_jerDownVal) = self.jetSmearer.getSmearValsPt(jet, genJet, rho)
 					jet_pt_nom = jet_pt_jerNomVal * jet.pt
 					if jet.pt > 15.:
@@ -1023,6 +1028,14 @@ class susysinglelep(Module):
 		if 'MET' in self.filename:
 			self.out.fillBranch("PD_MET",True)
 		else : self.out.fillBranch("PD_MET",False)
+		# CMG plotter complains about MC if no OR branches are there
+		# fill them with Zero any way
+		if self.isMC : 
+			self.out.fillBranch('HLT_EleOR', False)
+			self.out.fillBranch('HLT_MuOR',False)
+			self.out.fillBranch('HLT_LepOR',False)
+			self.out.fillBranch('HLT_MetOR',False)
+			
 					
 		
 		return True
