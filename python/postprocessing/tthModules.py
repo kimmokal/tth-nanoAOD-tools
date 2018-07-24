@@ -21,6 +21,12 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jecUncertainties impor
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepdata
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepSIG
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepMC
+
+
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepdata17
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepSIG17
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_base import susy1lepMC17
+
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_TOP import susy1lepTOPMC ,susy1lepTOPData
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_Signal import susy_1l_Sig16 ,susy_1l_Sig17
 #correct the nJets 
@@ -30,8 +36,8 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_nISR import susy_1
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_gen import susy_1l_gen
 # for Trig better to use Oleksii's for now 16April 2018 
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_trig import trigsusysusymod
-#lepton SF 
-from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_lepSF import susy_lepSF
+#lepton SF already in base module
+#from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_lepSF import susy_lepSF16, susy_lepSF17
 ###### Oleksii
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_triggers import susy_1l_Trigg2016,susy_1l_Trigg2017
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_filters import susy_1l_FiltersMC, susy_1l_FiltersData

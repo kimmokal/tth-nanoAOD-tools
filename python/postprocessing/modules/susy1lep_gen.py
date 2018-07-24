@@ -35,7 +35,10 @@ class genpartsusy(Module):
 		genpart = Collection(event, "GenPart")
 		# The following variables still need to be double-checked for validity
 		genLeps = [l for l in genpart if l.pdgId == (13 or -13 or 11 or -11) ]
-		genLepFromTau = [l for l in genLeps if l.statusFlags == 2]
+		# for some reason TTjets_* doesnot have GenPart_statusFla; better to check it before use it 
+		if hasattr(event,"GenPart_statusFlags"):
+			genLepFromTau = [l for l in genLeps if l.statusFlags == 2]
+		else :genLepFromTau = [l for l in genLeps]
 		genTaus = [l for l in genpart if l.pdgId == (15 or -15)]
 		genParts = [l for l in genpart]
 		#leptons from tau decay https://github.com/cms-nanoAOD/cmssw/blob/master/PhysicsTools/NanoAOD/python/genparticles_cff.py#L67

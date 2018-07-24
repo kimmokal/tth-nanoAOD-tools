@@ -49,29 +49,31 @@ def moduletorun(sample):
 	isUSER = False 
 	era = 'unknown'
 	modu = 'unknown'
-	if 'RunIISummer16NanoAOD' in str(sample) or "Run2016" in str(sample): era = 2016
-	elif 'RunIIFall17NanoAOD' in str(sample) or "Run2017" in str(sample): era = 2017
+	if 'RunIISummer16' in str(sample) or "Run2016" in str(sample): era = 2016
+	elif 'RunIIFall17' in str(sample) or "Run2017" in str(sample): era = 2017
 	if '/NANOAODSIM' in sample:
 		isMC = True 
 	if "/SMS-T1tttt" in sample:
 		isSIG = True
 	if isMC and not isSIG : 
-		modu = "susy1lepMC,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,susy1lepTOPMC,susy_1l_gen"#,xsec,genpartsusymod
+		modu = "susy_1l_FiltersMC,jecUncert,susy1lepTOPMC,susy_1l_gen"#,xsec,genpartsusymod
 		if era == 2016 : 
-			modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_lepSF,countHistogramAll_2016"
+			modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,countHistogramAll_2016,susy_1l_Trigg2016,susy1lepMC"
 		if era == 2017 :
-			modu+=",jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,countHistogramAll_2017"
+			# Temporarly use the jetmet uncertainty for 2016 
+			modu+=",jetmetUncertainties16,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,countHistogramAll_2017,susy_1l_Trigg2017,susy1lepMC17"
 		if "TTJets" in str(sample) and era == 2016: modu+=",susy_1l_nISR16"
 		if "TTJets" in str(sample) and era == 2017: modu+=",susy_1l_nISR17"
 	elif isMC and isSIG :
-		modu = "susy1lepSIG,susy_1l_Trigg,susy_1l_FiltersMC,jecUncert,puWeight,susy1lepTOPMC,susy_1l_gen"#,xsec,genpartsusymod
-		if era == 2016 : modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_lepSF,susy_1l_Sig16,countHistogramAll_2016"
-		if era == 2017 : modu+=",jetmetUncertainties17,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,susy_lepSF,susy_1l_Sig17,countHistogramAll_2017"
+		modu = "susy_1l_FiltersMC,jecUncert,puWeight,susy1lepTOPMC,susy_1l_gen"#,xsec,genpartsusymod
+			# Temporarly use the jetmet uncertainty for 2016 
+		if era == 2016 : modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_1l_Sig16,countHistogramAll_2016,susy_1l_Trigg2016,susy1lepSIG"
+		if era == 2017 : modu+=",jetmetUncertainties16,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,susy_1l_Sig17,countHistogramAll_2017,susy_1l_Trigg2017,susy1lepSIG17"
 	else :
 		if era == 2016 : 
 			modu = "susy1lepdata,susy_1l_Trigg2016,susy_1l_FiltersData,susy1lepTOPData -J $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/JSONS/Cert_271036-284044_13TeV_PromptReco_Collisions16_JSON.txt"
 		elif era == 2017:
-			modu = "susy1lepdata,susy_1l_Trigg2017,susy_1l_FiltersData,susy1lepTOPData -J $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/JSONS/Cert_294927-306462_13TeV_PromptReco_Collisions17_JSON.txt"
+			modu = "susy1lepdata17,susy_1l_Trigg2017,susy_1l_FiltersData,susy1lepTOPData -J $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/JSONS/Cert_294927-306462_13TeV_PromptReco_Collisions17_JSON.txt"
 	return modu
 
 if __name__ == '__main__':
@@ -92,7 +94,7 @@ if __name__ == '__main__':
 		
 	outdire = args.out
 	
-	os.system("export X509_USER_PROXY="+X509)
+	os.environ['X509_USER_PROXY'] = X509
 	os.system('voms-proxy-init --voms cms --valid 120:00')
 	
 
@@ -137,7 +139,14 @@ if __name__ == '__main__':
 			ext1 = "ext2"
 			dirname = outdire+"/"+getdir[1]+extension+ext1
 			textname = getdir[1]+extension+ext1
-			
+		elif "old_pmx" in getdir[2] : 
+			ext1 = "old_pmx"
+			dirname = outdire+"/"+getdir[1]+extension+ext1
+			textname = getdir[1]+extension+ext1
+		elif "new_pmx" in getdir[2] : 
+			ext1 = "new_pmx"
+			dirname = outdire+"/"+getdir[1]+extension+ext1
+			textname = getdir[1]+extension+ext1			
 		else :
 			dirname = outdire+"/"+getdir[1]+extension
 			textname = getdir[1]+extension

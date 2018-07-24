@@ -151,18 +151,81 @@ def checkEleMVA(lep,WP = 'Tight', era = "Spring16" ):
 
 #  print cleanedValueList, min(cleanedValueList)#d, key=d.get)
 class susysinglelep(Module):
-	def __init__(self, isMC , isSig):#, HTFilter, LTFilter):#, muonSelection, electronSelection):
+	def __init__(self, isMC , isSig, era, muonSelectionTag, electronSelectionTag):#, HTFilter, LTFilter):#, muonSelection, electronSelection):
 		self.isMC = isMC
-		self.isSig = isSig		
+		self.isSig = isSig
+		self.era = era	
+		print era 	
 		#self.HTFilt = HTFilter
 		#self.LTFilt = LTFilter
 		# smear jet pT to account for measured difference in JER between data and simulation.
 		self.jerInputFileName = "Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt"
 		self.jerUncertaintyInputFileName = "Spring16_25nsV10_MC_SF_AK4PFchs.txt"
-		self.jetSmearer = jetSmearer("Summer16_23Sep2016V4_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
+		###################### LepSF, JECSFs and JERSF for 2017 era ###############################################################
+		if self.era == "2016" : 
+			if self.isMC : 
+				if muonSelectionTag=="LooseWP_2016":
+					mu_f=["Mu_Trg.root","Mu_ID.root","Mu_Iso.root"]
+					mu_h = ["IsoMu24_OR_IsoTkMu24_PtEtaBins/pt_abseta_ratio",
+							"MC_NUM_LooseID_DEN_genTracks_PAR_pt_eta/pt_abseta_ratio",
+							"LooseISO_LooseID_pt_eta/pt_abseta_ratio"]
+				if electronSelectionTag=="GPMVA90_2016":
+					el_f = ["EGM2D_eleGSF.root","EGM2D_eleMVA90.root"]
+					el_h = ["EGamma_SF2D", "EGamma_SF2D"]
+				if muonSelectionTag=="MediumWP_2016":
+					mu_f=["Mu_Trg.root","Mu_ID.root","Mu_Iso.root"]
+					mu_h = ["IsoMu24_OR_IsoTkMu24_PtEtaBins/pt_abseta_ratio",
+							"MC_NUM_MediumID_DEN_genTracks_PAR_pt_eta/pt_abseta_ratio",
+							"LooseISO_MediumID_pt_eta/pt_abseta_ratio"]
+				if electronSelectionTag=="Tight_2016":
+					el_f = ["EGM2D_eleGSF.root","EGM2D_eleMVA90.root"]
+					el_h = ["EGamma_SF2D", "EGamma_SF2D"]
+			self.jerUncertaintyInputFileName = "Spring16_25nsV10_MC_SF_AK4PFchs.txt"
+			self.jetSmearer = jetSmearer("Summer16_23Sep2016V4_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
+		###################### LepSF, JECSFs and JERSF for 2017 era ############################################################### 
+		elif self.era == "2017":
+			if self.isMC : 
+				if muonSelectionTag=="LooseWP_2017":
+					mu_f=["Mu_Trg17.root","Mu_ID17.root","Mu_Iso17.root"]
+					mu_h = ["IsoMu27_PtEtaBins/pt_abseta_ratio",
+							"NUM_LooseID_DEN_genTracks_pt_abseta",
+							"NUM_LooseRelIso_DEN_LooseID_pt_abseta"]
+				if electronSelectionTag=="GPMVA90_2017":
+					el_f = ["EGM2D_eleGSF17.root","EGM2D_eleMVA90_17.root"]
+					el_h = ["EGamma_SF2D", "EGamma_SF2D"]
+				if muonSelectionTag=="MediumWP_2017":
+					mu_f=["Mu_Trg17.root","Mu_ID17.root","Mu_Iso17.root"]
+					mu_h = ["IsoMu27_PtEtaBins/pt_abseta_ratio",
+							"NUM_MediumID_DEN_genTracks_pt_abseta",
+							"NUM_LooseRelIso_DEN_MediumID_pt_abseta"]
+				if electronSelectionTag=="Tight_2017":
+					el_f = ["EGM2D_eleGSF17.root","EGM2D_eleMVA90_17.root"]
+					el_h = ["EGamma_SF2D", "EGamma_SF2D"]
+			# Temporarly use the jetmet uncertainty for 2016 
+			self.jerUncertaintyInputFileName = "Spring16_25nsV10_MC_SF_AK4PFchs.txt"
+			self.jetSmearer = jetSmearer("Summer16_23Sep2016V4_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
+			#self.jesUncertaintyInputFileName = "Fall17_17Nov2017_V6_MC_Uncertainty_AK4PFchs.txt"
+			#self.jetSmearer = jetSmearer("Fall17_17Nov2017_V6_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
+		else : 
+			raise ValueError("ERROR: Invalid era = '%s'!" % self.era)
+			
+		mu_f = ["%s/src/PhysicsTools/NanoAODTools/python/postprocessing/data/leptonSF/" % os.environ['CMSSW_BASE'] + f for f in mu_f]
+		el_f = ["%s/src/PhysicsTools/NanoAODTools/python/postprocessing/data/leptonSF/" % os.environ['CMSSW_BASE'] + f for f in el_f]
+		self.mu_f = ROOT.std.vector(str)(len(mu_f))
+		self.mu_h = ROOT.std.vector(str)(len(mu_f))
+		for i in range(len(mu_f)): self.mu_f[i] = mu_f[i]; self.mu_h[i] = mu_h[i];
+		self.el_f = ROOT.std.vector(str)(len(el_f))
+		self.el_h = ROOT.std.vector(str)(len(el_f))
+		for i in range(len(el_f)): self.el_f[i] = el_f[i]; self.el_h[i] = el_h[i];
+	
+		if "/LeptonEfficiencyCorrector_cc.so" not in ROOT.gSystem.GetLibraries():
+			print "Load C++ Worker"
+			ROOT.gROOT.ProcessLine(".L %s/src/PhysicsTools/NanoAODTools/python/postprocessing/helpers/LeptonEfficiencyCorrector.cc+" % os.environ['CMSSW_BASE'])
 		pass
 	def beginJob(self):
 		self.jetSmearer.beginJob()
+		self._worker_mu = ROOT.LeptonEfficiencyCorrector(self.mu_f,self.mu_h)
+		self._worker_el = ROOT.LeptonEfficiencyCorrector(self.el_f,self.el_h)
 		pass
 	def endJob(self):
 		self.jetSmearer.endJob()
@@ -281,12 +344,9 @@ class susysinglelep(Module):
 		self.filename = inputFile.GetName()
 		print inputFile.GetName()
 		print self.xs
-		if self.isMC : 
-			self.out.branch('HLT_EleOR',"O");
-			self.out.branch('HLT_MuOR',"O");
-			self.out.branch('HLT_LepOR',"O");
-			self.out.branch('HLT_MetOR',"O");
-		
+		self.out.branch("Muon_effSF", "F");
+		self.out.branch("Electron_effSF", "F");
+		self.out.branch("lepSF","F");
 	def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
 		pass
 	def met(self, met, isMC):
@@ -653,7 +713,25 @@ class susysinglelep(Module):
 			self.out.fillBranch("Lep_miniIso", tightLeps[0].miniPFRelIso_all)
 			if hasattr(tightLeps[0],"hoe"):
 				self.out.fillBranch("Lep_hOverE", tightLeps[0].hoe)
-		
+			if self.isMC : 
+				for tlep in tightLeps:
+					if abs(tlep.pdgId) == 13:
+						sf_mu = self._worker_mu.getSF(tlep.pdgId,tlep.pt,tlep.eta)
+						self.out.fillBranch("lepSF", sf_mu)
+						self.out.fillBranch("Muon_effSF", sf_mu)
+					elif abs(tlep.pdgId) == 11:
+						sf_el = self._worker_el.getSF(tlep.pdgId,tlep.pt,tlep.eta)
+						self.out.fillBranch("lepSF", sf_el)
+						self.out.fillBranch("Electron_effSF", sf_el)
+					else :
+						self.out.fillBranch("Muon_effSF", 1.0)
+						self.out.fillBranch("Electron_effSF", 1.0)
+						self.out.fillBranch("lepSF", 1.0)
+			else : 
+				self.out.fillBranch("Muon_effSF", 1.0)
+				self.out.fillBranch("Electron_effSF", 1.0)
+				self.out.fillBranch("lepSF", 1.0)
+				
 		elif len(leps) > 0: # fill it with leading lepton
 			self.out.fillBranch("Lep_Idx", 0)
 		
@@ -1028,17 +1106,13 @@ class susysinglelep(Module):
 		if 'MET' in self.filename:
 			self.out.fillBranch("PD_MET",True)
 		else : self.out.fillBranch("PD_MET",False)
-		# CMG plotter complains about MC if no OR branches are there
-		# fill them with Zero any way
-		if self.isMC : 
-			self.out.fillBranch('HLT_EleOR', False)
-			self.out.fillBranch('HLT_MuOR',False)
-			self.out.fillBranch('HLT_LepOR',False)
-			self.out.fillBranch('HLT_MetOR',False)
-			
+
 					
 		
 		return True
-susy1lepSIG = lambda : susysinglelep(True,True)#,
-susy1lepMC = lambda : susysinglelep(True,False)#,
-susy1lepdata = lambda : susysinglelep(False ,False) 
+susy1lepSIG  = lambda : susysinglelep(True , True,  "2016",'MediumWP_2016', 'Tight_2016')#,
+susy1lepMC   = lambda : susysinglelep(True , False, "2016",'MediumWP_2016', 'Tight_2016')#,
+susy1lepdata = lambda : susysinglelep(False, False, "2016",'MediumWP_2016', 'Tight_2016') 
+susy1lepSIG17 = lambda : susysinglelep(True ,True , "2017",'MediumWP_2017', 'Tight_2017')#,
+susy1lepMC17  = lambda : susysinglelep(True ,False, "2017",'MediumWP_2017', 'Tight_2017')#,
+susy1lepdata17= lambda : susysinglelep(False,False, "2017",'MediumWP_2017', 'Tight_2017') 
