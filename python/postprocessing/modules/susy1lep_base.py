@@ -10,6 +10,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetSmearer import jetSmearer
 from RunIISummer16_Moriond17 import getXsec
 from PhysicsTools.NanoAODTools.postprocessing.tools import matchObjectCollection, matchObjectCollectionMultiple
+from PhysicsTools.NanoAODTools.postprocessing.modules.jme.JetReCalibrator import JetReCalibrator
 
 import itertools
 from ROOT import TLorentzVector, TVector2, std
@@ -32,12 +33,19 @@ smearJER = True
 btag_LooseWP = 0.5426
 btag_MediumWP = 0.8484
 btag_TightWP = 0.9535
+#https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation80XReReco
+btag_LooseWP17 = 0.5803
+btag_MediumWP17 = 0.8838
+btag_TightWP17 = 0.9693
 
 # DeepCSV (new Deep Flavour tagger)
 btag_DeepLooseWP = 0.2219
 btag_DeepMediumWP = 0.6324
 btag_DeepTightWP = 0.8958
-
+#https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation94X
+btag_DeepLooseWP17 = 0.1522
+btag_DeepMediumWP17 = 0.4941
+btag_DeepTightWP17 = 0.8001	 
 ###########
 # MUONS
 ###########
@@ -49,44 +57,8 @@ muID = 'medium' # 'medium'(2015) or 'ICHEPmediumMuonId' (2016)
 # Electrons
 ###########
 
-eleID = 'CB' # 'MVA' or 'CB'
+eleID = 'CB'
 
-## PHYS14 IDs
-## Non-triggering electron MVA id (Phys14 WP)
-# Tight MVA WP
-Ele_mvaPhys14_eta0p8_T = 0.73;
-Ele_mvaPhys14_eta1p4_T = 0.57;
-Ele_mvaPhys14_eta2p4_T = 0.05;
-# Medium MVA WP  <--- UPDATE
-Ele_mvaPhys14_eta0p8_M = 0.35;
-Ele_mvaPhys14_eta1p4_M = 0.20;
-Ele_mvaPhys14_eta2p4_M = -0.52;
-# Loose MVA WP
-Ele_mvaPhys14_eta0p8_L = 0.35;
-Ele_mvaPhys14_eta1p4_L = 0.20;
-Ele_mvaPhys14_eta2p4_L = -0.52;
-
-## SPRING15 IDs
-## Non-triggering electron MVA id (Spring15 WP):
-# https://twiki.cern.ch/twiki/bin/viewauth/CMS/SUSLeptonSF#Electrons
-# Tight MVA WP
-Ele_mvaSpring15_eta0p8_T = 0.87;
-Ele_mvaSpring15_eta1p4_T = 0.6;
-Ele_mvaSpring15_eta2p4_T = 0.17;
-# Medium MVA WP  <--- UPDATE
-Ele_mvaSpring15_eta0p8_M = 0.35;
-Ele_mvaSpring15_eta1p4_M = 0.20;
-Ele_mvaSpring15_eta2p4_M = -0.52;
-# Loose MVA WP
-Ele_mvaSpring15_eta0p8_L = -0.16;
-Ele_mvaSpring15_eta1p4_L = -0.65;
-Ele_mvaSpring15_eta2p4_L = -0.74;
-# VLoose MVA WP
-Ele_mvaSpring15_eta0p8_VL = -0.11;
-Ele_mvaSpring15_eta1p4_VL = -0.55;
-Ele_mvaSpring15_eta2p4_VL = -0.74;
-
-## Ele MVA check
 
 ## Isolation
 ele_miniIsoCut = 0.1
@@ -99,63 +71,15 @@ goodEl_lostHits = 0
 goodEl_sip3d = 4
 goodMu_sip3d = 4
 
-def checkEleMVA(lep,WP = 'Tight', era = "Spring16" ):
-		# Eta dependent MVA ID check:
-		passID = False
-		
-		lepEta = abs(lep.eta)
-		
-		# eta cut
-		if lepEta > eleEta:
-			print "here"
-			return False
-		
-		if era == "Spring15":
-			lepMVA = lep.mvaSpring16GP
-			# numbers here needed to be chaecked if we gonna use MVA ID 
-			if WP == 'Tight':
-				if lepEta < 0.8: passID = lepMVA > Ele_mvaSpring15_eta0p8_T
-				elif lepEta < 1.44: passID = lepMVA > Ele_mvaSpring15_eta1p4_T
-				elif lepEta >= 1.57: passID = lepMVA > Ele_mvaSpring15_eta2p4_T
-			elif WP == 'Medium':
-				if lepEta < 0.8: passID = lepMVA > Ele_mvaSpring15_eta0p8_M
-				elif lepEta < 1.44: passID = lepMVA > Ele_mvaSpring15_eta1p4_M
-				elif lepEta >= 1.57: passID = lepMVA > Ele_mvaSpring15_eta2p4_M
-			elif WP == 'Loose':
-				if lepEta < 0.8: passID = lepMVA > Ele_mvaSpring15_eta0p8_L
-				elif lepEta < 1.44: passID = lepMVA > Ele_mvaSpring15_eta1p4_L
-				elif lepEta >= 1.57: passID = lepMVA > Ele_mvaSpring15_eta2p4_L
-			elif WP == 'VLoose':
-				if lepEta < 0.8: passID = lepMVA > Ele_mvaSpring15_eta0p8_VL
-				elif lepEta < 1.44: passID = lepMVA > Ele_mvaSpring15_eta1p4_VL
-				elif lepEta >= 1.57: passID = lepMVA > Ele_mvaSpring15_eta2p4_VL
-		
-		elif era == "Phys14":
-			lepMVA = lep.mvaIdPhys14
-		
-			if WP == 'Tight':
-				if lepEta < 0.8: passID = lepMVA > Ele_mvaPhys14_eta0p8_T
-				elif lepEta < 1.44: passID = lepMVA > Ele_mvaPhys14_eta1p4_T
-				elif lepEta >= 1.57: passID = lepMVA > Ele_mvaPhys14_eta2p4_T
-			elif WP == 'Medium':
-				if lepEta < 0.8: passID = lepMVA > Ele_mvaPhys14_eta0p8_M
-				elif lepEta < 1.44: passID = lepMVA > Ele_mvaPhys14_eta1p4_M
-				elif lepEta >= 1.57: passID = lepMVA > Ele_mvaPhys14_eta2p4_M
-			elif WP == 'Loose':
-				if lepEta < 0.8: passID = lepMVA > Ele_mvaPhys14_eta0p8_L
-				elif lepEta < 1.44: passID = lepMVA > Ele_mvaPhys14_eta1p4_L
-				elif lepEta >= 1.57: passID = lepMVA > Ele_mvaPhys14_eta2p4_L
-		
-		return passID
-
-
 #  print cleanedValueList, min(cleanedValueList)#d, key=d.get)
 class susysinglelep(Module):
-	def __init__(self, isMC , isSig, era, muonSelectionTag, electronSelectionTag):#, HTFilter, LTFilter):#, muonSelection, electronSelection):
+	def __init__(self, isMC , isSig, era, muonSelectionTag, electronSelectionTag,CorrMET):#, HTFilter, LTFilter):#, muonSelection, electronSelection):
 		self.isMC = isMC
 		self.isSig = isSig
 		self.era = era	
-		print era 	
+		self.muonSelectionTag = muonSelectionTag
+		self.electronSelectionTag = electronSelectionTag
+		self.CorrMET = CorrMET
 		#self.HTFilt = HTFilter
 		#self.LTFilt = LTFilter
 		# smear jet pT to account for measured difference in JER between data and simulation.
@@ -164,48 +88,48 @@ class susysinglelep(Module):
 		###################### LepSF, JECSFs and JERSF for 2017 era ###############################################################
 		if self.era == "2016" : 
 			if self.isMC : 
-				if muonSelectionTag=="LooseWP_2016":
+				if self.muonSelectionTag=="LooseWP_2016":
 					mu_f=["Mu_Trg.root","Mu_ID.root","Mu_Iso.root"]
 					mu_h = ["IsoMu24_OR_IsoTkMu24_PtEtaBins/pt_abseta_ratio",
 							"MC_NUM_LooseID_DEN_genTracks_PAR_pt_eta/pt_abseta_ratio",
 							"LooseISO_LooseID_pt_eta/pt_abseta_ratio"]
-				if electronSelectionTag=="GPMVA90_2016":
+				if self.electronSelectionTag=="GPMVA90_2016":
 					el_f = ["EGM2D_eleGSF.root","EGM2D_eleMVA90.root"]
 					el_h = ["EGamma_SF2D", "EGamma_SF2D"]
-				if muonSelectionTag=="MediumWP_2016":
+				if self.muonSelectionTag=="MediumWP_2016":
 					mu_f=["Mu_Trg.root","Mu_ID.root","Mu_Iso.root"]
 					mu_h = ["IsoMu24_OR_IsoTkMu24_PtEtaBins/pt_abseta_ratio",
 							"MC_NUM_MediumID_DEN_genTracks_PAR_pt_eta/pt_abseta_ratio",
 							"LooseISO_MediumID_pt_eta/pt_abseta_ratio"]
-				if electronSelectionTag=="Tight_2016":
+				if self.electronSelectionTag=="Tight_2016":
 					el_f = ["EGM2D_eleGSF.root","EGM2D_eleMVA90.root"]
 					el_h = ["EGamma_SF2D", "EGamma_SF2D"]
-			self.jerUncertaintyInputFileName = "Spring16_25nsV10_MC_SF_AK4PFchs.txt"
+			#self.jerUncertaintyInputFileName = "Spring16_25nsV10_MC_SF_AK4PFchs.txt"
 			self.jetSmearer = jetSmearer("Summer16_23Sep2016V4_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
 		###################### LepSF, JECSFs and JERSF for 2017 era ############################################################### 
 		elif self.era == "2017":
 			if self.isMC : 
-				if muonSelectionTag=="LooseWP_2017":
+				if self.muonSelectionTag=="LooseWP_2017":
 					mu_f=["Mu_Trg17.root","Mu_ID17.root","Mu_Iso17.root"]
 					mu_h = ["IsoMu27_PtEtaBins/pt_abseta_ratio",
 							"NUM_LooseID_DEN_genTracks_pt_abseta",
 							"NUM_LooseRelIso_DEN_LooseID_pt_abseta"]
-				if electronSelectionTag=="GPMVA90_2017":
+				if self.electronSelectionTag=="GPMVA90_2017":
 					el_f = ["EGM2D_eleGSF17.root","EGM2D_eleMVA90_17.root"]
 					el_h = ["EGamma_SF2D", "EGamma_SF2D"]
-				if muonSelectionTag=="MediumWP_2017":
+				if self.muonSelectionTag=="MediumWP_2017":
 					mu_f=["Mu_Trg17.root","Mu_ID17.root","Mu_Iso17.root"]
 					mu_h = ["IsoMu27_PtEtaBins/pt_abseta_ratio",
 							"NUM_MediumID_DEN_genTracks_pt_abseta",
 							"NUM_LooseRelIso_DEN_MediumID_pt_abseta"]
-				if electronSelectionTag=="Tight_2017":
+				if self.electronSelectionTag=="Tight_2017":
 					el_f = ["EGM2D_eleGSF17.root","EGM2D_eleMVA90_17.root"]
 					el_h = ["EGamma_SF2D", "EGamma_SF2D"]
 			# Temporarly use the jetmet uncertainty for 2016 
-			self.jerUncertaintyInputFileName = "Spring16_25nsV10_MC_SF_AK4PFchs.txt"
-			self.jetSmearer = jetSmearer("Summer16_23Sep2016V4_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
-			#self.jesUncertaintyInputFileName = "Fall17_17Nov2017_V6_MC_Uncertainty_AK4PFchs.txt"
-			#self.jetSmearer = jetSmearer("Fall17_17Nov2017_V6_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
+			#self.jerUncertaintyInputFileName = "Spring16_25nsV10_MC_SF_AK4PFchs.txt"
+			#self.jetSmearer = jetSmearer("Summer16_23Sep2016V4_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
+			#self.jerUncertaintyInputFileName = "Fall17_17Nov2017_V6_MC_Uncertainty_AK4PFchs.txt"
+			self.jetSmearer = jetSmearer("Fall17_17Nov2017_V6_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
 		else : 
 			raise ValueError("ERROR: Invalid era = '%s'!" % self.era)
 			
@@ -221,6 +145,9 @@ class susysinglelep(Module):
 		if "/LeptonEfficiencyCorrector_cc.so" not in ROOT.gSystem.GetLibraries():
 			print "Load C++ Worker"
 			ROOT.gROOT.ProcessLine(".L %s/src/PhysicsTools/NanoAODTools/python/postprocessing/helpers/LeptonEfficiencyCorrector.cc+" % os.environ['CMSSW_BASE'])
+		
+		self.jetReCalibrator = JetReCalibrator("Fall17_17Nov2017_V6_MC", "AK4PFchs" , True, os.environ['CMSSW_BASE'] + "/src/PhysicsTools/NanoAODTools/data/jme/", calculateSeparateCorrections = False, calculateType1METCorrection  = False)
+		self.unclEnThreshold = 15.
 		pass
 	def beginJob(self):
 		self.jetSmearer.beginJob()
@@ -249,7 +176,6 @@ class susysinglelep(Module):
 			lep.mcMatchId  = (gen.sourceId if gen != None else  0)
 			lep.mcMatchTau = (gen in event.gentauleps if gen else -99)
 			lep.mcLep=gen
-			
 	def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
 		self.out = wrappedOutputTree
 		self.out.branch("isData","I");
@@ -283,8 +209,6 @@ class susysinglelep(Module):
 		self.out.branch("GendPhi","F");
 		self.out.branch("GenLT","F");
 		self.out.branch("GenMET","F");
-		 # no HF stuff
-		#"METNoHF", "LTNoHF", "dPhiNoHF",
             ## jets	
 		self.out.branch("ST1","F");
 		self.out.branch("HT1","F");    
@@ -303,7 +227,9 @@ class susysinglelep(Module):
 		self.out.branch("htJet30ja","F");
 		self.out.branch("htJet40j","F");
 		self.out.branch("Jet1_pt","F");
-		self.out.branch("Jet2_pt","F");           
+		self.out.branch("Jet2_pt","F");
+		self.out.branch("Jet1_eta","F");
+		self.out.branch("Jet2_eta","F");		           
 		 ## top tags
 		self.out.branch("nHighPtTopTag","I");
 		self.out.branch("nHighPtTopTagPlusTau23","I");
@@ -313,7 +239,6 @@ class susysinglelep(Module):
 		self.out.branch("Mll","F"); #di-lepton mass
 		#self.out.branch("METfilters","I"); not needed for nanoAOD 
             #Datasets
-
 		self.out.branch("PD_JetHT","O");
 		self.out.branch("PD_SingleEle","O");
 		self.out.branch("PD_SingleMu","O");
@@ -347,19 +272,37 @@ class susysinglelep(Module):
 		self.out.branch("Muon_effSF", "F");
 		self.out.branch("Electron_effSF", "F");
 		self.out.branch("lepSF","F");
+		self.out.branch("TightEl_eCorr","F");
+		self.h_eCorr_vs_eta_tight =  ROOT.TH2F("h_eCorr_vs_eta_tight","eCorr_vs_eta",25,0,5,68,-3,3);
+		self.h_eCorr_vs_phi_tight =  ROOT.TH2F("h_eCorr_vs_phi_tight","eCorr_vs_phi",25,0,5,140,-math.pi,math.pi);
+		self.h_eCorr_vs_pt_tight  =  ROOT.TH2F("h_eCorr_vs_pt_tight","eCorr_vs_pt",25,0,5,200,0,200);
+		self.h_eCorr_vs_eta =  ROOT.TH2F("h_eCorr_vs_eta","eCorr_vs_eta",25,0,30,68,-3,3);
+		self.h_eCorr_vs_phi =  ROOT.TH2F("h_eCorr_vs_phi","eCorr_vs_phi",25,0,30,140,-math.pi,math.pi);
+		self.h_eCorr_vs_pt  =  ROOT.TH2F("h_eCorr_vs_pt","eCorr_vs_pt",25,0,30,200,0,200);
+		self.h_eCorr_vs_eta_veto =  ROOT.TH2F("h_eCorr_vs_eta_veto","eCorr_vs_eta_veto",25,0,5,68,-3,3);
+		self.h_eCorr_vs_phi_veto =  ROOT.TH2F("h_eCorr_vs_phi_veto","eCorr_vs_phi_veto",25,0,5,140,-math.pi,math.pi);
+		self.h_eCorr_vs_pt_veto  =  ROOT.TH2F("h_eCorr_vs_pt_veto","eCorr_vs_pt_veto",25,0,5,200,0,200);
+		self.out.branch("Met","F");
 	def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
+		outputFile.cd()
+		self.h_eCorr_vs_eta_veto.Write()
+		self.h_eCorr_vs_phi_veto.Write()
+		self.h_eCorr_vs_pt_veto.Write()
+		self.h_eCorr_vs_eta_tight.Write()
+		self.h_eCorr_vs_phi_tight.Write()
+		self.h_eCorr_vs_pt_tight.Write()
+		self.h_eCorr_vs_eta.Write()
+		self.h_eCorr_vs_phi.Write()
+		self.h_eCorr_vs_pt.Write()
 		pass
-	def met(self, met, isMC):
-        ## the MC has JER smearing applied which has output branch met_[pt/phi]_smeared which should be compared 
-        ## with data branch MET_[pt/phi]. This essentially aliases the two branches to one common variable.
-		if isMC:
-			return (met.pt_smeared,met.phi_smeared)
-		else:
-			return (met.pt,met.phi)
-	
 	def analyze(self, event):
  		"""process event, return True (go to next module) or False (fail, go to next event)"""
 		allelectrons = Collection(event, "Electron")
+		for elect in allelectrons:
+			self.h_eCorr_vs_eta.Fill(elect.eCorr,elect.eta)
+			self.h_eCorr_vs_phi.Fill(elect.eCorr,elect.phi)
+			self.h_eCorr_vs_pt.Fill(elect.eCorr,elect.pt)  
+
 		allmuons = Collection(event, "Muon")
 		Jets = Collection(event, "Jet")
 		met = Object(event, "MET")
@@ -369,8 +312,7 @@ class susysinglelep(Module):
 			event.genleps = [l for l in Gen if abs(l.pdgId) == 11 or abs(l.pdgId) == 13]
 			GenTau = Collection(event, "GenVisTau")
 			event.gentauleps = [l for l in GenTau ]
-		# for all leptons (veto or tight)
-		
+		# for all leptons (veto or tight)		
 		### inclusive leptons = all leptons that could be considered somewhere in the analysis, with minimal requirements (used e.g. to match to MC)
 		event.inclusiveLeptons = []
 		### selected leptons = subset of inclusive leptons passing some basic id definition and pt requirement
@@ -418,29 +360,6 @@ class susysinglelep(Module):
 		LepOther = [l for l in event.otherLeptons]
 		self.out.fillBranch("nLepGood",len(goodLep))
 		self.out.fillBranch("nLepOther",len(LepOther))
-	
-		
-		'''Elecs = [x for x in electrons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.cutBased >= 1 and x.miniPFRelIso_all < 0.4]
-		Mus = [x for x in muons if x.isPFcand and x.pt > 10 and abs(x.eta) < 2.4 and x.miniPFRelIso_all < 0.4  ]
-		Elec_Other = [x for x in electrons if x not in set(Elecs) and abs(x.eta) < 2.4 if x.cutBased>=1]
-		Mus_Other = [x for x in muons if  x not in set(Mus) and abs(x.eta) < 2.4 ]
-		goodLep = [i for i in itertools.chain(Mus, Elecs)]
-		LepOther = [i for i in itertools.chain(Mus_Other, Elec_Other)]
-		# Clean good leptons and otherleptons 
-		for Mu in goodLep :
-			if abs(Mu.pdgId) == 13 :
-				for El in goodLep :
-					if abs(El.pdgId) == 11 : 
-						if Mu.p4().DeltaR(El.p4()) < 0.05 :
-							#print "overlap fonded remove Electron"
-							goodLep.remove(El)
-		for Mu in LepOther :
-			if abs(Mu.pdgId) == 13 :
-				for El in LepOther :
-					if abs(El.pdgId) == 11 : 
-						if Mu.p4().DeltaR(El.p4()) < 0.05 :
-							#print "overlap fonded remove Electron"
-							LepOther.remove(El)'''
 				
 		#LepOther = goodLep
 		leps = goodLep 
@@ -519,12 +438,6 @@ class susysinglelep(Module):
 					passMediumID = (eidCB >= 3)# and abs(lep.dxy) < 0.05 and abs(lep.dz) < 0.1)# and lep.convVeto)
 					#passLooseID = (eidCB >= 2)
 					passVetoID = (eidCB >= 1)# and abs(lep.dxy) < 0.2 and abs(lep.dz) < 0.5) # and lep.convVeto)
-			
-				elif eleID == 'MVA':
-					# ELE MVA ID
-					# check MVA WPs
-					passTightID = checkEleMVA(lep,'Tight')
-					passLooseID = checkEleMVA(lep,'VLoose')
 				# selected
 				if passTightID:
 			
@@ -534,8 +447,6 @@ class susysinglelep(Module):
 					# Iso check:
 					if lep.miniPFRelIso_all < ele_miniIsoCut: passIso = True
 					# conversion check
-					if eleID == 'MVA':
-						if lep.lostHits <= goodEl_lostHits and lep.convVeto and lep.sip3d < goodEl_sip3d: passConv = True
 					elif eleID == 'CB':
 						passConv = True #if lep.lostHits <= goodEl_lostHits and lep.convVeto and lep.sip3d < goodEl_sip3d else False  # cuts already included in POG_Cuts_ID_SPRING15_25ns_v1_ConvVetoDxyDz_X
 
@@ -652,8 +563,8 @@ class susysinglelep(Module):
 		
 			self.out.fillBranch("nTightLeps", len(tightLeps))
 			self.out.fillBranch("nTightMu",sum([ abs(lep.pdgId) == 13 for lep in tightLeps]))
-			self.out.fillBranch("nTightEl", sum([ abs(lep.pdgId) == 11 for lep in tightLeps]))
 			
+			self.out.fillBranch("nTightEl", sum([ abs(lep.pdgId) == 11 for lep in tightLeps]))
 			self.out.fillBranch("tightLepsIdx", tightLepsIdx)
 		
 			self.out.fillBranch("Selected", 1)
@@ -696,10 +607,21 @@ class susysinglelep(Module):
 		# get number of tight el and mu
 		tightEl = [lep for lep in tightLeps if abs(lep.pdgId) == 11]
 		tightMu = [lep for lep in tightLeps if abs(lep.pdgId) == 13]
-		
+		VetoEl  = [lep for lep in vetoLeps if abs(lep.pdgId) == 11]
+		VetoMu  = [lep for lep in vetoLeps if abs(lep.pdgId) == 13]
 		self.out.fillBranch("nEl", len(tightEl))
 		self.out.fillBranch("nMu", len(tightMu))
-		
+		for El in tightEl:
+			# this branch is for investigating the electron energy calibraition
+			self.out.fillBranch("TightEl_eCorr", El.eCorr )
+			self.h_eCorr_vs_eta_tight.Fill(El.eCorr, El.eta)
+			self.h_eCorr_vs_phi_tight.Fill(El.eCorr, El.phi)
+			self.h_eCorr_vs_pt_tight.Fill(El.eCorr, El.pt)
+		for El in VetoEl : 
+			self.h_eCorr_vs_eta_veto.Fill(El.eCorr, El.eta)
+			self.h_eCorr_vs_phi_veto.Fill(El.eCorr, El.phi)
+			self.h_eCorr_vs_pt_veto.Fill(El.eCorr, El.pt)
+
 		# save leading lepton vars
 		if len(tightLeps) > 0:# leading tight lep
 			self.out.fillBranch("Lep_Idx", tightLepsIdx[0])
@@ -770,27 +692,37 @@ class susysinglelep(Module):
 		( met_px_nom, met_py_nom ) = ( met_px, met_py )
 		# match reconstructed jets to generator level ones
 		# (needed to evaluate JER scale factors and uncertainties)
-		
-		if self.isMC :
+		if self.isMC and self.CorrMET :
 			rho = getattr(event,"fixedGridRhoFastjetAll")
 			genJets = Collection(event, "GenJet" )
 			pairs = matchObjectCollection(Jets, genJets)
 			for jet in jets:
 				genJet = pairs[jet]
-				'''if smearJER==True :
-					(jet_pt_jerNomVal, jet_pt_jerUpVal, jet_pt_jerDownVal) = self.jetSmearer.getSmearValsPt(jet, genJet, rho)
-					jet_pt_nom = jet_pt_jerNomVal * jet.pt
-					if jet.pt > 15.:
-						jet_cosPhi = math.cos(jet.phi)
-						jet_sinPhi = math.sin(jet.phi)
-						met_px_nom = met_px_nom - (jet_pt_nom - jet.pt)*jet_cosPhi
-						met_py_nom = met_py_nom - (jet_pt_nom - jet.pt)*jet_sinPhi
-						met_pt_nom = math.sqrt(met_px_nom**2 + met_py_nom**2)
-						met_phi_nom = math.atan2(met_py_nom, met_px_nom)
-						met.pt = met_pt_nom
-						met.phi = met_phi_nom
-					jet.pt = jet_pt_nom'''
+				(jet_pt_jerNomVal, jet_pt_jerUpVal, jet_pt_jerDownVal) = self.jetSmearer.getSmearValsPt(jet, genJet, rho)
+				# exclude this from the JECs correction to follow the SUSY recipe, well see if it will slove the prefire issue
+				if jet.pt < 75 and ( 2.7 < abs(jet.eta) < 3):jet_pt = jet.pt
+				else :jet_pt = self.jetReCalibrator.correct(jet,rho)
+				jet_pt_nom = jet_pt_jerNomVal * jet_pt
+				if jet_pt_nom < 0.0:  jet_pt_nom *= -1.0
+				jet_pt_jerUp         = jet_pt_jerUpVal  *jet_pt
+				jet_pt_jerDown       = jet_pt_jerDownVal*jet_pt
+				# recalculate the MET after applying the JEC JER 
+				if jet_pt > 15.:
+					jet_cosPhi = math.cos(jet.phi)
+					jet_sinPhi = math.sin(jet.phi)
+					met_px_nom = met_px_nom - (jet_pt_nom - jet_pt)*jet_cosPhi
+					met_py_nom = met_py_nom - (jet_pt_nom - jet_pt)*jet_sinPhi
+					met_pt_nom = math.sqrt(met_px_nom**2 + met_py_nom**2)
+					met_phi_nom = math.atan2(met_py_nom, met_px_nom)
+					met.pt = met_pt_nom
+					met.phi = met_phi_nom
+				# JECs already applied so apply only JER
+				jet.pt = jet_pt_jerNomVal * jet.pt 
+				if jet.pt < 0.0:  jet.pt *= -1.0
+
 		metp4.SetPtEtaPhiM(met.pt,0.,met.phi,0.) # only use met vector to derive transverse quantities)	
+		self.out.fillBranch("Met" , met.pt)
+		
 		centralJet30 = []; centralJet30idx = []
 		centralJet40 = []
 		cleanJets25 = []; cleanJets25idx = [] 
@@ -864,20 +796,16 @@ class susysinglelep(Module):
 				if dR < dRmin:
 					cleanJets.append(jet25)
 					cleanJetsidx.append(ijet)
-		#if nJetC !=  len(cJet30Clean) and False:
-		#	print "Non-clean jets: ", nJetC, "\tclean jets:", len(cJet30Clean)
-		#	print jets
-		#	print leps
-		#	print otherleps
-		
 		# cleaned jets
 		nJet30C = len(cJet30Clean)
 		self.out.fillBranch("nJets30Clean",len(cJet30Clean))
 		
 		if nJet30C > 0:
 			self.out.fillBranch("Jet1_pt", cJet30Clean[0].pt)
+			self.out.fillBranch("Jet1_eta", cJet30Clean[0].eta)
 		if nJet30C > 1:
 			self.out.fillBranch("Jet2_pt", cJet30Clean[1].pt)
+			self.out.fillBranch("Jet2_eta", cJet30Clean[1].eta)
 		
 		# imho, use Jet2_pt > 80 instead
 		self.out.fillBranch("LSLjetptGT80", 1 if sum([j.pt>80 for j in cJet30Clean])>=2 else 0)
@@ -891,10 +819,13 @@ class susysinglelep(Module):
 		
 		## B tagging WPs for CSVv2 (CSV-IVF)
 		## from: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagging#Preliminary_working_or_operating
-		
 		# WP defined on top
-		btagWP = btag_MediumWP
-		
+		if self.era == "2016":
+			btagWP = btag_MediumWP
+			btag_DeepMediumWP = btag_DeepMediumWP
+		elif self.era == "2017":
+			btagWP = btag_MediumWP17
+			btag_DeepMediumWP = btag_DeepMediumWP17
 		BJetMedium30 = []
 		BJetMedium40 = []
 		
@@ -1106,13 +1037,10 @@ class susysinglelep(Module):
 		if 'MET' in self.filename:
 			self.out.fillBranch("PD_MET",True)
 		else : self.out.fillBranch("PD_MET",False)
-
-					
-		
 		return True
-susy1lepSIG  = lambda : susysinglelep(True , True,  "2016",'MediumWP_2016', 'Tight_2016')#,
-susy1lepMC   = lambda : susysinglelep(True , False, "2016",'MediumWP_2016', 'Tight_2016')#,
-susy1lepdata = lambda : susysinglelep(False, False, "2016",'MediumWP_2016', 'Tight_2016') 
-susy1lepSIG17 = lambda : susysinglelep(True ,True , "2017",'MediumWP_2017', 'Tight_2017')#,
-susy1lepMC17  = lambda : susysinglelep(True ,False, "2017",'MediumWP_2017', 'Tight_2017')#,
-susy1lepdata17= lambda : susysinglelep(False,False, "2017",'MediumWP_2017', 'Tight_2017') 
+susy1lepSIG  = lambda : susysinglelep(True , True,  "2016",'MediumWP_2016', 'Tight_2016', True)
+susy1lepMC   = lambda : susysinglelep(True , False, "2016",'MediumWP_2016', 'Tight_2016', True)
+susy1lepdata = lambda : susysinglelep(False, False, "2016",'MediumWP_2016', 'Tight_2016', False) 
+susy1lepSIG17 = lambda : susysinglelep(True ,True , "2017",'MediumWP_2017', 'Tight_2017', True)
+susy1lepMC17  = lambda : susysinglelep(True ,False, "2017",'MediumWP_2017', 'Tight_2017', True)
+susy1lepdata17= lambda : susysinglelep(False,False, "2017",'MediumWP_2017', 'Tight_2017', False) 
