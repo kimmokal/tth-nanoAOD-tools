@@ -8,7 +8,8 @@ f = sys.argv[-1]
 
 TreeName="Events"
 file0 = ROOT.TFile.Open(f)
-t = file0.Get(TreeName)
+
+t = file0.Get(TreeName)	
 hcount = file0.Get("Count")
 hcountPos = file0.Get("CountPosWeight")
 hcountNeg = file0.Get("CountNegWeight")
@@ -36,9 +37,11 @@ for i in range(t.GetEntries()):
 													if t.LT > 250 :
 														if t.nBJet >= 1: 
 															outTree.Fill()
-hcount.Write()
-hcountPos.Write()
-hcountNeg.Write()
+
 outTree.AutoSave()
+if file0.GetListOfKeys().Contains("Count"):
+	hcount.Write()
+	hcountPos.Write()
+	hcountNeg.Write()
 fout.Write()
 fout.Close()

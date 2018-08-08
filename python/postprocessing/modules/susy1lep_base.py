@@ -30,22 +30,7 @@ eleEta = 2.4
 ###########
 smearJER = True
 
-btag_LooseWP = 0.5426
-btag_MediumWP = 0.8484
-btag_TightWP = 0.9535
-#https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation80XReReco
-btag_LooseWP17 = 0.5803
-btag_MediumWP17 = 0.8838
-btag_TightWP17 = 0.9693
 
-# DeepCSV (new Deep Flavour tagger)
-btag_DeepLooseWP = 0.2219
-btag_DeepMediumWP = 0.6324
-btag_DeepTightWP = 0.8958
-#https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation94X
-btag_DeepLooseWP17 = 0.1522
-btag_DeepMediumWP17 = 0.4941
-btag_DeepTightWP17 = 0.8001	 
 ###########
 # MUONS
 ###########
@@ -80,13 +65,21 @@ class susysinglelep(Module):
 		self.muonSelectionTag = muonSelectionTag
 		self.electronSelectionTag = electronSelectionTag
 		self.CorrMET = CorrMET
+		
 		#self.HTFilt = HTFilter
 		#self.LTFilt = LTFilter
 		# smear jet pT to account for measured difference in JER between data and simulation.
 		self.jerInputFileName = "Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt"
 		self.jerUncertaintyInputFileName = "Spring16_25nsV10_MC_SF_AK4PFchs.txt"
 		###################### LepSF, JECSFs and JERSF for 2017 era ###############################################################
-		if self.era == "2016" : 
+		if self.era == "2016" :
+			self.btag_LooseWP = 0.5426
+			self.btag_MediumWP = 0.8484
+			self.btag_TightWP = 0.9535	
+			#https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation80XReReco
+			self.btag_DeepLooseWP = 0.2219
+			self.btag_DeepMediumWP = 0.6324
+			self.btag_DeepTightWP = 0.8958 
 			if self.isMC : 
 				if self.muonSelectionTag=="LooseWP_2016":
 					mu_f=["Mu_Trg.root","Mu_ID.root","Mu_Iso.root"]
@@ -108,6 +101,14 @@ class susysinglelep(Module):
 			self.jetSmearer = jetSmearer("Summer16_23Sep2016V4_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
 		###################### LepSF, JECSFs and JERSF for 2017 era ############################################################### 
 		elif self.era == "2017":
+			self.btag_LooseWP = 0.5803
+			self.btag_MediumWP = 0.8838
+			self.btag_TightWP = 0.9693
+			# DeepCSV (new Deep Flavour tagger)
+			#https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation94X
+			self.btag_DeepLooseWP = 0.1522
+			self.btag_DeepMediumWP = 0.4941
+			self.btag_DeepTightWP = 0.8001
 			if self.isMC : 
 				if self.muonSelectionTag=="LooseWP_2017":
 					mu_f=["Mu_Trg17.root","Mu_ID17.root","Mu_Iso17.root"]
@@ -132,27 +133,27 @@ class susysinglelep(Module):
 			self.jetSmearer = jetSmearer("Fall17_17Nov2017_V6_MC", "AK4PFchs", self.jerInputFileName, self.jerUncertaintyInputFileName)
 		else : 
 			raise ValueError("ERROR: Invalid era = '%s'!" % self.era)
-			
-		mu_f = ["%s/src/PhysicsTools/NanoAODTools/python/postprocessing/data/leptonSF/" % os.environ['CMSSW_BASE'] + f for f in mu_f]
-		el_f = ["%s/src/PhysicsTools/NanoAODTools/python/postprocessing/data/leptonSF/" % os.environ['CMSSW_BASE'] + f for f in el_f]
-		self.mu_f = ROOT.std.vector(str)(len(mu_f))
-		self.mu_h = ROOT.std.vector(str)(len(mu_f))
-		for i in range(len(mu_f)): self.mu_f[i] = mu_f[i]; self.mu_h[i] = mu_h[i];
-		self.el_f = ROOT.std.vector(str)(len(el_f))
-		self.el_h = ROOT.std.vector(str)(len(el_f))
-		for i in range(len(el_f)): self.el_f[i] = el_f[i]; self.el_h[i] = el_h[i];
-	
+		if self.isMC:
+			mu_f = ["%s/src/PhysicsTools/NanoAODTools/python/postprocessing/data/leptonSF/" % os.environ['CMSSW_BASE'] + f for f in mu_f]
+			el_f = ["%s/src/PhysicsTools/NanoAODTools/python/postprocessing/data/leptonSF/" % os.environ['CMSSW_BASE'] + f for f in el_f]
+			self.mu_f = ROOT.std.vector(str)(len(mu_f))
+			self.mu_h = ROOT.std.vector(str)(len(mu_f))
+			for i in range(len(mu_f)): self.mu_f[i] = mu_f[i]; self.mu_h[i] = mu_h[i];
+			self.el_f = ROOT.std.vector(str)(len(el_f))
+			self.el_h = ROOT.std.vector(str)(len(el_f))
+			for i in range(len(el_f)): self.el_f[i] = el_f[i]; self.el_h[i] = el_h[i];
+			self.jetReCalibrator = JetReCalibrator("Fall17_17Nov2017_V6_MC", "AK4PFchs" , True, os.environ['CMSSW_BASE'] + "/src/PhysicsTools/NanoAODTools/data/jme/", calculateSeparateCorrections = False, calculateType1METCorrection  = False)
+			self.unclEnThreshold = 15.
+
 		if "/LeptonEfficiencyCorrector_cc.so" not in ROOT.gSystem.GetLibraries():
 			print "Load C++ Worker"
 			ROOT.gROOT.ProcessLine(".L %s/src/PhysicsTools/NanoAODTools/python/postprocessing/helpers/LeptonEfficiencyCorrector.cc+" % os.environ['CMSSW_BASE'])
-		
-		self.jetReCalibrator = JetReCalibrator("Fall17_17Nov2017_V6_MC", "AK4PFchs" , True, os.environ['CMSSW_BASE'] + "/src/PhysicsTools/NanoAODTools/data/jme/", calculateSeparateCorrections = False, calculateType1METCorrection  = False)
-		self.unclEnThreshold = 15.
 		pass
 	def beginJob(self):
 		self.jetSmearer.beginJob()
-		self._worker_mu = ROOT.LeptonEfficiencyCorrector(self.mu_f,self.mu_h)
-		self._worker_el = ROOT.LeptonEfficiencyCorrector(self.el_f,self.el_h)
+		if self.isMC : 
+			self._worker_mu = ROOT.LeptonEfficiencyCorrector(self.mu_f,self.mu_h)
+			self._worker_el = ROOT.LeptonEfficiencyCorrector(self.el_f,self.el_h)
 		pass
 	def endJob(self):
 		self.jetSmearer.endJob()
@@ -700,8 +701,10 @@ class susysinglelep(Module):
 				genJet = pairs[jet]
 				(jet_pt_jerNomVal, jet_pt_jerUpVal, jet_pt_jerDownVal) = self.jetSmearer.getSmearValsPt(jet, genJet, rho)
 				# exclude this from the JECs correction to follow the SUSY recipe, well see if it will slove the prefire issue
-				if jet.pt < 75 and ( 2.7 < abs(jet.eta) < 3):jet_pt = jet.pt
-				else :jet_pt = self.jetReCalibrator.correct(jet,rho)
+				if self.era == "2017" : 
+					if jet.pt < 75 and ( 2.0 < abs(jet.eta) < 3.0): jet_pt = jet.pt * (1.-jet.rawFactor)
+					else :jet_pt = self.jetReCalibrator.correct(jet,rho)
+				else :jet_pt = jet.pt
 				jet_pt_nom = jet_pt_jerNomVal * jet_pt
 				if jet_pt_nom < 0.0:  jet_pt_nom *= -1.0
 				jet_pt_jerUp         = jet_pt_jerUpVal  *jet_pt
@@ -722,7 +725,6 @@ class susysinglelep(Module):
 
 		metp4.SetPtEtaPhiM(met.pt,0.,met.phi,0.) # only use met vector to derive transverse quantities)	
 		self.out.fillBranch("Met" , met.pt)
-		
 		centralJet30 = []; centralJet30idx = []
 		centralJet40 = []
 		cleanJets25 = []; cleanJets25idx = [] 
@@ -820,12 +822,10 @@ class susysinglelep(Module):
 		## B tagging WPs for CSVv2 (CSV-IVF)
 		## from: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagging#Preliminary_working_or_operating
 		# WP defined on top
-		if self.era == "2016":
-			btagWP = btag_MediumWP
-			btag_DeepMediumWP = btag_DeepMediumWP
-		elif self.era == "2017":
-			btagWP = btag_MediumWP17
-			btag_DeepMediumWP = btag_DeepMediumWP17
+		btagWP = self.btag_MediumWP
+		btag_DeepMediumWP = self.btag_DeepMediumWP
+		btag_LooseWP = self.btag_LooseWP
+		
 		BJetMedium30 = []
 		BJetMedium40 = []
 		

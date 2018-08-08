@@ -58,60 +58,61 @@ if __name__ == '__main__':
 		else :
 			raise ValueError( "do not understand your potion")
 	else : os.makedirs(str(outdire))
-	subdires = [f for f in listdir(indire) ]
-	for subdir in subdires:
+	
+	rootfiles = find_all_matching('.root',indire)
+	i = 0 
+	for subdir in rootfiles:
+		rf = subdir 
+		subdir = subdir.replace(".root","").split("/")[-1]
 		if subdir.startswith('.'):  continue
 		os.makedirs(str(outdire)+"/"+str(subdir))
 		if args.trig :
 			os.system("cp ./templates/CutFlow_NANO_Trig.py "+outdire+"/"+subdir)
 		else : 
 			os.system("cp ./templates/CutFlow_NANO.py "+outdire+"/"+subdir)
-		rootfiles = find_all_matching('.root',indire+"/"+subdir)
-		i = 0 
 		logsdir = outdire+'/'+subdir+"/logs"
 		os.makedirs(logsdir)
 		print " prepering ",subdir
-		for rf in rootfiles:
-			f = TFile(rf,'READ')
-			if not f.Get("Events"): 
-				print "corrupted file check if you want : ",f 
-				continue
-			if f.IsZombie():
-				print f," IsZombie"
-				continue
-			if not args.batchMode : 
-				retval = os.getcwd()
-				os.chdir(outdire+"/"+subdir)
-				if args.trig:
-					os.system('./CutFlow_NANO_Trig.py  '+rf)
-				else : os.system('./CutFlow_NANO.py  '+rf)
-				os.chdir(retval)
-				print subdir+" has been filtered"
-			else : 
-				os.system("cp "+condTEMP+" "+outdire+'/'+subdir+"/Condor"+str(i)+".submit")
-				os.system("cp "+wrapTEMP+" "+outdire+'/'+subdir+"/Warp"+str(i)+".sh")		
-				s1 = open(outdire+'/'+subdir+"/Condor"+str(i)+".submit").read()
-				#print textname
-				s1 = s1.replace('@EXESH', outdire+'/'+subdir+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@time','60*60*6')
-				f1 = open(outdire+'/'+subdir+"/Condor"+str(i)+".submit", 'w')
-				f1.write(s1)
-				f1.close()
-				s2 = open(outdire+'/'+subdir+"/Warp"+str(i)+".sh").read()
-				s2 = s2.replace('@WORKDIR',workarea).replace('@EXEDIR',outdire+'/'+subdir).replace('@ROOTFILE', rf )
-				if args.trig:
-					s2 = s2.replace('@COMAND','./CutFlow_NANO_Trig.py ')
-				else :s2 = s2.replace('@COMAND','./CutFlow_NANO.py ')
-				f2 = open(outdire+'/'+subdir+"/Warp"+str(i)+".sh", 'w')
-				f2.write(s2)
-				f2.close()
-				file = open('submit_filter_HTC.sh','a')
-				file.write("\n")
-				if args.site == "DESY":
-					file.write("condor_submit -name s02 "+outdire+'/'+subdir+"/Condor"+str(i)+".submit")
-				elif args.site == "Bari" : 
-					file.write("condor_submit -name ettore "+outdire+'/'+subdir+"/Condor"+str(i)+".submit")
-				file.close()		
-			i+=1
+		f = TFile(rf,'READ')
+		if not f.Get("Events"): 
+			print "corrupted file check if you want : ",f 
+			continue
+		if f.IsZombie():
+			print f," IsZombie"
+			continue
+		if not args.batchMode : 
+			retval = os.getcwd()
+			os.chdir(outdire+"/"+subdir)
+			if args.trig:
+				os.system('./CutFlow_NANO_Trig.py  '+rf)
+			else : os.system('./CutFlow_NANO.py  '+rf)
+			os.chdir(retval)
+			print subdir+" has been filtered"
+		else : 
+			os.system("cp "+condTEMP+" "+outdire+'/'+subdir+"/Condor"+str(i)+".submit")
+			os.system("cp "+wrapTEMP+" "+outdire+'/'+subdir+"/Warp"+str(i)+".sh")		
+			s1 = open(outdire+'/'+subdir+"/Condor"+str(i)+".submit").read()
+			#print textname
+			s1 = s1.replace('@EXESH', outdire+'/'+subdir+"/Warp"+str(i)+".sh").replace('@LOGS',logsdir).replace('@time','60*60*6')
+			f1 = open(outdire+'/'+subdir+"/Condor"+str(i)+".submit", 'w')
+			f1.write(s1)
+			f1.close()
+			s2 = open(outdire+'/'+subdir+"/Warp"+str(i)+".sh").read()
+			s2 = s2.replace('@WORKDIR',workarea).replace('@EXEDIR',outdire+'/'+subdir).replace('@ROOTFILE', rf )
+			if args.trig:
+				s2 = s2.replace('@COMAND','./CutFlow_NANO_Trig.py ')
+			else :s2 = s2.replace('@COMAND','./CutFlow_NANO.py ')
+			f2 = open(outdire+'/'+subdir+"/Warp"+str(i)+".sh", 'w')
+			f2.write(s2)
+			f2.close()
+			file = open('submit_filter_HTC.sh','a')
+			file.write("\n")
+			if args.site == "DESY":
+				file.write("condor_submit -name s02 "+outdire+'/'+subdir+"/Condor"+str(i)+".submit")
+			elif args.site == "Bari" : 
+				file.write("condor_submit -name ettore "+outdire+'/'+subdir+"/Condor"+str(i)+".submit")
+			file.close()		
+		i+=1
 	os.system('chmod a+x submit_filter_HTC.sh')
 	print 'merging done OR READY FOR BATCH'
 
