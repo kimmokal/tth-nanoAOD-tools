@@ -41,7 +41,10 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_trig import trigsu
 ###### Oleksii
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_triggers import susy_1l_Trigg2016,susy_1l_Trigg2017
 from tthAnalysis.NanoAODTools.postprocessing.modules.susy_1l_filters import susy_1l_FiltersMC, susy_1l_FiltersData
-
+##############
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puAutoWeight as puWeight_2017
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import muonScaleRes2016, muonScaleRes2017
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import jetmetUncertainties2016, jetmetUncertainties2017
+############ SUSY 1L-dPhi systematics ###############
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_syst import susy1lepSIG_syst,susy1lepMC_syst 
+

@@ -3,6 +3,7 @@ import math, os
 import array
 import operator
 
+from leptonselector import leptonSel
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 # for met object 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection,Object
@@ -270,9 +271,11 @@ class susysinglelep(Module):
 		self.filename = inputFile.GetName()
 		print inputFile.GetName()
 		print self.xs
+		
 		self.out.branch("Muon_effSF", "F");
 		self.out.branch("Electron_effSF", "F");
 		self.out.branch("lepSF","F");
+		# only for checking the electron corr
 		self.out.branch("TightEl_eCorr","F");
 		self.h_eCorr_vs_eta_tight =  ROOT.TH2F("h_eCorr_vs_eta_tight","eCorr_vs_eta",25,0,5,68,-3,3);
 		self.h_eCorr_vs_phi_tight =  ROOT.TH2F("h_eCorr_vs_phi_tight","eCorr_vs_phi",25,0,5,140,-math.pi,math.pi);
@@ -298,13 +301,11 @@ class susysinglelep(Module):
 		pass
 	def analyze(self, event):
  		"""process event, return True (go to next module) or False (fail, go to next event)"""
-		allelectrons = Collection(event, "Electron")
-		for elect in allelectrons:
+		leptonSel(event)
+		for elect in event.allelectrons:
 			self.h_eCorr_vs_eta.Fill(elect.eCorr,elect.eta)
 			self.h_eCorr_vs_phi.Fill(elect.eCorr,elect.phi)
 			self.h_eCorr_vs_pt.Fill(elect.eCorr,elect.pt)  
-
-		allmuons = Collection(event, "Muon")
 		Jets = Collection(event, "Jet")
 		met = Object(event, "MET")
 		genmet = Object(event, "GenMET")
@@ -313,50 +314,6 @@ class susysinglelep(Module):
 			event.genleps = [l for l in Gen if abs(l.pdgId) == 11 or abs(l.pdgId) == 13]
 			GenTau = Collection(event, "GenVisTau")
 			event.gentauleps = [l for l in GenTau ]
-		# for all leptons (veto or tight)		
-		### inclusive leptons = all leptons that could be considered somewhere in the analysis, with minimal requirements (used e.g. to match to MC)
-		event.inclusiveLeptons = []
-		### selected leptons = subset of inclusive leptons passing some basic id definition and pt requirement
-		### other    leptons = subset of inclusive leptons failing some basic id definition and pt requirement
-		event.selectedLeptons = []
-		event.selectedMuons = []
-		event.selectedElectrons = []
-		event.otherLeptons = []
-		inclusiveMuons = []
-		inclusiveElectrons = []
-		for mu in allmuons:
-			if (mu.pt>10 and abs(mu.eta)<2.4 and
-					abs(mu.dxy)<0.5 and abs(mu.dz)<1.):
-				inclusiveMuons.append(mu)
-		for ele in allelectrons:
-			if ( ele.cutBased >=1 and
-					ele.pt>10 and abs(ele.eta)<2.4 ):#and abs(ele.dxy)<0.5 and abs(ele.dz)<1. and ele.lostHits <=1.0) :
-				inclusiveElectrons.append(ele)
-		event.inclusiveLeptons = inclusiveMuons + inclusiveElectrons
-		
-		# make loose leptons (basic selection)
-		for mu in inclusiveMuons :
-				if (mu.pt > 10 and abs(mu.eta) < 2.4 and mu.miniPFRelIso_all < 0.4 and mu.isPFcand and abs(mu.dxy)<0.05 and abs(mu.dz)<1):
-					event.selectedLeptons.append(mu)
-					event.selectedMuons.append(mu)
-				else:
-					event.otherLeptons.append(mu)
-		looseMuons = event.selectedLeptons[:]
-		for ele in inclusiveElectrons :
-			ele.looseIdOnly = ele.cutBased >=1
-			if (ele.looseIdOnly and
-						ele.pt>10 and abs(ele.eta)<2.4 and ele.miniPFRelIso_all < 0.4 and ele.isPFcand and #ele.convVeto and abs(ele.dxy)<0.05 and abs(ele.dz)<0.5  and ele.lostHits <=1.0 and 
-						(bestMatch(ele, looseMuons)[1] > (0.05**2))):
-					event.selectedLeptons.append(ele)
-					event.selectedElectrons.append(ele)
-			else:
-					event.otherLeptons.append(ele)
-		event.otherLeptons.sort(key = lambda l : l.pt, reverse = True)
-		event.selectedLeptons.sort(key = lambda l : l.pt, reverse = True)
-		event.selectedMuons.sort(key = lambda l : l.pt, reverse = True)
-		event.selectedElectrons.sort(key = lambda l : l.pt, reverse = True)
-		event.inclusiveLeptons.sort(key = lambda l : l.pt, reverse = True)		
-		
 		goodLep = [l for l in event.selectedLeptons]
 		LepOther = [l for l in event.otherLeptons]
 		self.out.fillBranch("nLepGood",len(goodLep))
