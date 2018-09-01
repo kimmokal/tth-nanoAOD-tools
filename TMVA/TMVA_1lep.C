@@ -308,7 +308,7 @@ void TMVA_1lep(){
    
    Double_t signalWeight      = 1.0;
    Double_t backgroundWeight = 1.0;
-
+   Double_t lumi=35.9 ;
    // Create a new root output file.
    TString outfileName( "TMVASignalBackground.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
@@ -331,82 +331,152 @@ void TMVA_1lep(){
 	dataloader->AddVariable( "nBJet"		, "nBJet"		, "", 'F' );
 	dataloader->AddVariable( "dPhi"			, "dPhi"		, "", 'F' );
 	
+	dataloader->AddSpectator("Jet_btagSF_csvv2","Jet_btagSF_csvv2","", 'D');
+	dataloader->AddSpectator("puWeight","puWeight","", 'D');
+	dataloader->AddSpectator("lepSF","lepSF","", 'D');
+	//dataloader->AddSpectator("nISRweight","nISRweight","", 'D');
+	//dataloader->AddSpectator("Xsec","Xsec","", 'D');
    // You can add so-called "Spectator variables", which are not used in the MVA training,
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
    // input variables, the response values of all trained MVAs, and the spectator variables
 
    //dataloader->AddSpectator( "spec1 := var1*2",  "Spectator 1", "units", 'F' );
    //dataloader->AddSpectator( "spec2 := var1*3",  "Spectator 2", "units", 'F' );
-
-	dataloader->AddSignalTree    ( signal,     signalWeight       );
 	
-	//dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_100to200, backgroundWeight );
-	//dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_100to200_1, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_1200to2500, backgroundWeight );
-	//dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_200to400 , backgroundWeight );
-	//dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_200to400_1, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_2500toInf, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_400to600 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_400to600_1, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_600to800 , backgroundWeight );
-	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_800to1200 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_QCD_HT1000to1500 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_QCD_HT1000to1500_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_QCD_HT1500to2000 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_QCD_HT1500to2000_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_QCD_HT2000toInf 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_QCD_HT2000toInf_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_QCD_HT500to700 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_QCD_HT500to700_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_QCD_HT700to1000 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_QCD_HT700to1000_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_ST_s_channel_4f_leptonDecays 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_ST_t_channel_antitop_4f_inclusiveDecays 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_ST_t_channel_top_4f_inclusiveDecays 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_ST_tW_top_5f_NoFullyHadronicDecays 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTJets_DiLept 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTJets_DiLept_ext1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTJets_HT_1200to2500 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTJets_HT_2500toInf 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTJets_HT_600to800 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTJets_HT_800to1200 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTJets_SingleLeptFromT 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTJets_SingleLeptFromTbar 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTJets_SingleLeptFromTbar_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTTo2L2Nu 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTWJetsToLNu_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTWJetsToLNu_2 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTZToLLNuNu_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTZToLLNuNu_2 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTZToLLNuNu_3 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TTZToQQ 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_TT 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_1200To2500	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_2500ToInf	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_2500ToInf_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_400To600 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_400To600_1	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_600To800 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_600To800_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_800To1200 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_800To1200_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_2 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_madgraphMLM 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WJetsToLNu_madgraphMLM_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WWTo2L2Nu 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WWToLNuQQ 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WWToLNuQQ_1 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WZTo1L1Nu2Q_2 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_WZTo2L2Q 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_ZZTo2L2Nu 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_ZZTo2L2Q 	, backgroundWeight );
-	dataloader->AddBackgroundTree(tree_ZZTo2L2Q_1 	, backgroundWeight );
+	TH1F *weight_signal = (TH1F*)sinput->Get("Count");
+	TH1F *weight_DYJetsToLL_M_50_HT_1200to2500=(TH1F*)input_DYJetsToLL_M_50_HT_1200to2500->Get("Count");
+	TH1F *weight_DYJetsToLL_M_50_HT_2500toInf=(TH1F*)input_DYJetsToLL_M_50_HT_2500toInf->Get("Count");
+	TH1F *weight_DYJetsToLL_M_50_HT_400to600=(TH1F*)input_DYJetsToLL_M_50_HT_400to600->Get("Count");
+	TH1F *weight_DYJetsToLL_M_50_HT_400to600_1=(TH1F*)input_DYJetsToLL_M_50_HT_400to600_1->Get("Count");
+	TH1F *weight_DYJetsToLL_M_50_HT_600to800=(TH1F*)input_DYJetsToLL_M_50_HT_600to800->Get("Count");
+	TH1F *weight_DYJetsToLL_M_50_HT_800to1200=(TH1F*)input_DYJetsToLL_M_50_HT_800to1200->Get("Count");
+	TH1F *weight_QCD_HT1000to1500=(TH1F*)input_QCD_HT1000to1500->Get("Count");
+	TH1F *weight_QCD_HT1000to1500_1=(TH1F*)input_QCD_HT1000to1500_1->Get("Count");
+	TH1F *weight_QCD_HT1500to2000=(TH1F*)input_QCD_HT1500to2000->Get("Count");
+	TH1F *weight_QCD_HT1500to2000_1=(TH1F*)input_QCD_HT1500to2000_1->Get("Count");
+	TH1F *weight_QCD_HT2000toInf=(TH1F*)input_QCD_HT2000toInf->Get("Count");
+	TH1F *weight_QCD_HT2000toInf_1=(TH1F*)input_QCD_HT2000toInf_1->Get("Count");
+	TH1F *weight_QCD_HT500to700=(TH1F*)input_QCD_HT500to700->Get("Count");
+	TH1F *weight_QCD_HT500to700_1=(TH1F*)input_QCD_HT500to700_1->Get("Count");
+	TH1F *weight_QCD_HT700to1000=(TH1F*)input_QCD_HT700to1000->Get("Count");
+	TH1F *weight_QCD_HT700to1000_1=(TH1F*)input_QCD_HT700to1000_1->Get("Count");
+	TH1F *weight_ST_s_channel_4f_leptonDecays=(TH1F*)input_ST_s_channel_4f_leptonDecays->Get("Count");
+	TH1F *weight_ST_t_channel_antitop_4f_inclusiveDecays=(TH1F*)input_ST_t_channel_antitop_4f_inclusiveDecays->Get("Count");
+	TH1F *weight_ST_t_channel_top_4f_inclusiveDecays=(TH1F*)input_ST_t_channel_top_4f_inclusiveDecays->Get("Count");
+	TH1F *weight_ST_tW_top_5f_NoFullyHadronicDecays=(TH1F*)input_ST_tW_top_5f_NoFullyHadronicDecays->Get("Count");
+	TH1F *weight_TTJets_DiLept=(TH1F*)input_TTJets_DiLept->Get("Count");
+	TH1F *weight_TTJets_DiLept_ext1=(TH1F*)input_TTJets_DiLept_ext1->Get("Count");
+	TH1F *weight_TTJets_HT_1200to2500=(TH1F*)input_TTJets_HT_1200to2500->Get("Count");
+	TH1F *weight_TTJets_HT_2500toInf=(TH1F*)input_TTJets_HT_2500toInf->Get("Count");
+	TH1F *weight_TTJets_HT_600to800=(TH1F*)input_TTJets_HT_600to800->Get("Count");
+	TH1F *weight_TTJets_HT_800to1200=(TH1F*)input_TTJets_HT_800to1200->Get("Count");
+	TH1F *weight_TTJets_SingleLeptFromT=(TH1F*)input_TTJets_SingleLeptFromT->Get("Count");
+	TH1F *weight_TTJets_SingleLeptFromTbar=(TH1F*)input_TTJets_SingleLeptFromTbar->Get("Count");
+	TH1F *weight_TTJets_SingleLeptFromTbar_1=(TH1F*)input_TTJets_SingleLeptFromTbar_1->Get("Count");
+	TH1F *weight_TTTo2L2Nu=(TH1F*)input_TTTo2L2Nu->Get("Count");
+	TH1F *weight_TTWJetsToLNu_1=(TH1F*)input_TTWJetsToLNu_1->Get("Count");
+	TH1F *weight_TTWJetsToLNu_2=(TH1F*)input_TTWJetsToLNu_2->Get("Count");
+	TH1F *weight_TTZToLLNuNu_1=(TH1F*)input_TTZToLLNuNu_1->Get("Count");
+	TH1F *weight_TTZToLLNuNu_2=(TH1F*)input_TTZToLLNuNu_2->Get("Count");
+	TH1F *weight_TTZToLLNuNu_3=(TH1F*)input_TTZToLLNuNu_3->Get("Count");
+	TH1F *weight_TTZToQQ=(TH1F*)input_TTZToQQ->Get("Count");
+	TH1F *weight_TT=(TH1F*)input_TT->Get("Count");
+	TH1F *weight_WJetsToLNu_HT_1200To2500=(TH1F*)input_WJetsToLNu_HT_1200To2500->Get("Count");
+	TH1F *weight_WJetsToLNu_HT_2500ToInf=(TH1F*)input_WJetsToLNu_HT_2500ToInf->Get("Count");
+	TH1F *weight_WJetsToLNu_HT_2500ToInf_1=(TH1F*)input_WJetsToLNu_HT_2500ToInf_1->Get("Count");
+	TH1F *weight_WJetsToLNu_HT_400To600=(TH1F*)input_WJetsToLNu_HT_400To600->Get("Count");
+	TH1F *weight_WJetsToLNu_HT_400To600_1=(TH1F*)input_WJetsToLNu_HT_400To600_1->Get("Count");
+	TH1F *weight_WJetsToLNu_HT_600To800=(TH1F*)input_WJetsToLNu_HT_600To800->Get("Count");
+	TH1F *weight_WJetsToLNu_HT_600To800_1=(TH1F*)input_WJetsToLNu_HT_600To800_1->Get("Count");
+	TH1F *weight_WJetsToLNu_HT_800To1200=(TH1F*)input_WJetsToLNu_HT_800To1200->Get("Count");
+	TH1F *weight_WJetsToLNu_HT_800To1200_1=(TH1F*)input_WJetsToLNu_HT_800To1200_1->Get("Count");
+	TH1F *weight_WJetsToLNu_1=(TH1F*)input_WJetsToLNu_1->Get("Count");
+	TH1F *weight_WJetsToLNu_2=(TH1F*)input_WJetsToLNu_2->Get("Count");
+	TH1F *weight_WJetsToLNu_madgraphMLM=(TH1F*)input_WJetsToLNu_madgraphMLM->Get("Count");
+	TH1F *weight_WJetsToLNu_madgraphMLM_1=(TH1F*)input_WJetsToLNu_madgraphMLM_1->Get("Count");
+	TH1F *weight_WWTo2L2Nu=(TH1F*)input_WWTo2L2Nu->Get("Count");
+	TH1F *weight_WWToLNuQQ=(TH1F*)input_WWToLNuQQ->Get("Count");
+	TH1F *weight_WWToLNuQQ_1=(TH1F*)input_WWToLNuQQ_1->Get("Count");
+	TH1F *weight_WZTo1L1Nu2Q_2=(TH1F*)input_WZTo1L1Nu2Q_2->Get("Count");
+	TH1F *weight_WZTo2L2Q=(TH1F*)input_WZTo2L2Q->Get("Count");
+	TH1F *weight_ZZTo2L2Nu=(TH1F*)input_ZZTo2L2Nu->Get("Count");
+	TH1F *weight_ZZTo2L2Q=(TH1F*)input_ZZTo2L2Q->Get("Count");
+	TH1F *weight_ZZTo2L2Q_1=(TH1F*)input_ZZTo2L2Q_1->Get("Count");
+
+	dataloader->AddSignalTree    ( signal,     weight_signal->GetBinContent(1));
+	/*dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_1200to2500	, 0.1514*1.23*1*lumi*1000/weight_DYJetsToLL_M_50_HT_1200to2500->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_2500toInf	, 0.003565*1.23*1*lumi*1000/weight_DYJetsToLL_M_50_HT_2500toInf->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_400to600,   5.678*1.23*1*lumi*1000/weight_DYJetsToLL_M_50_HT_400to600->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_400to600_1	, 5.678*1.23*1*lumi*1000/weight_DYJetsToLL_M_50_HT_400to600_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_600to800	,  1.367*1.23*1*lumi*1000/weight_DYJetsToLL_M_50_HT_600to800->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_DYJetsToLL_M_50_HT_800to1200, 0.6304*1.23*1*lumi*1000/weight_DYJetsToLL_M_50_HT_800to1200->GetBinContent(1));
+	
+	dataloader->AddBackgroundTree(tree_QCD_HT1000to1500, 1206.0*1*lumi*1000/weight_QCD_HT1000to1500->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_QCD_HT1000to1500_1, 1206.0*1*lumi*1000/weight_QCD_HT1000to1500_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_QCD_HT1500to2000, 120.4*1*lumi*1000/weight_QCD_HT1500to2000->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_QCD_HT1500to2000_1, 120.4*1*lumi*1000/weight_QCD_HT1500to2000_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_QCD_HT2000toInf, 25.25*1*lumi*1000/weight_QCD_HT2000toInf->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_QCD_HT2000toInf_1, 25.25*1*lumi*1000/weight_QCD_HT2000toInf_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_QCD_HT500to700, 31630.0*1*lumi*1000/weight_QCD_HT500to700->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_QCD_HT500to700_1, 31630.0*1*lumi*1000/weight_QCD_HT500to700_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_QCD_HT700to1000, 6802.0*1*lumi*1000/weight_QCD_HT700to1000->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_QCD_HT700to1000_1,6802.0*1*lumi*1000/weight_QCD_HT700to1000_1->GetBinContent(1));
+	
+	dataloader->AddBackgroundTree(tree_ST_s_channel_4f_leptonDecays, 3.365*1*lumi*1000/weight_ST_s_channel_4f_leptonDecays->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_ST_t_channel_antitop_4f_inclusiveDecays, 80.95*1*lumi*1000/weight_ST_t_channel_antitop_4f_inclusiveDecays->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_ST_t_channel_top_4f_inclusiveDecays, 80.95*1*lumi*1000/weight_ST_t_channel_top_4f_inclusiveDecays->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_ST_tW_top_5f_NoFullyHadronicDecays, 19.55*1*lumi*1000/weight_ST_tW_top_5f_NoFullyHadronicDecays->GetBinContent(1));
+	*/
+	dataloader->AddBackgroundTree(tree_TTJets_DiLept, 831.76*((3*0.108)*(3*0.108))*1*lumi*1000/weight_TTJets_DiLept->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTJets_DiLept_ext1, 831.76*((3*0.108)*(3*0.108))*1*lumi*1000/weight_TTJets_DiLept_ext1->GetBinContent(1));
+	/*
+	dataloader->AddBackgroundTree(tree_TTJets_HT_1200to2500, 0.12*831.76/502.2*1*lumi*1000/weight_TTJets_HT_1200to2500->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTJets_HT_2500toInf, 0.001430*831.76/502.2*1*lumi*1000/weight_TTJets_HT_2500toInf->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTJets_HT_600to800, 1.610*831.76/502.2*1*lumi*1000/weight_TTJets_HT_600to800->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTJets_HT_800to1200, 0.663*831.76/502.2*1*lumi*1000/weight_TTJets_HT_800to1200->GetBinContent(1));
+	
+	dataloader->AddBackgroundTree(tree_TTJets_SingleLeptFromT, 831.76*(3*0.108)*(1-3*0.108)*lumi*1000/weight_TTJets_SingleLeptFromT->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTJets_SingleLeptFromTbar, 831.76*(3*0.108)*(1-3*0.108)*lumi*1000/weight_TTJets_SingleLeptFromTbar->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTJets_SingleLeptFromTbar_1, 831.76*(3*0.108)*(1-3*0.108)*lumi*1000/weight_TTJets_SingleLeptFromTbar_1->GetBinContent(1));
+	
+	dataloader->AddBackgroundTree(tree_TTTo2L2Nu, 0.2529*lumi*1000/weight_TTTo2L2Nu->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTWJetsToLNu_1, 0.2043*1*lumi*1000/weight_TTWJetsToLNu_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTWJetsToLNu_2, 0.2043*1*lumi*1000/weight_TTWJetsToLNu_2->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTZToLLNuNu_1, 0.2529*lumi*1000/weight_TTZToLLNuNu_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTZToLLNuNu_2, 0.2529*lumi*1000/weight_TTZToLLNuNu_2->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTZToLLNuNu_3, 0.2529*lumi*1000/weight_TTZToLLNuNu_3->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_TTZToQQ, 0.5297*lumi*1000/weight_TTZToQQ->GetBinContent(1));
+	
+	//dataloader->AddBackgroundTree(tree_TT, *lumi*1000/weight_TT->GetBinContent(1));
+	
+	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_1200To2500	, 1.329*1.21*1*lumi*1000/weight_WJetsToLNu_HT_1200To2500->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_2500ToInf	, 0.03216*1.21*lumi*1000/weight_WJetsToLNu_HT_2500ToInf->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_2500ToInf_1, 0.03216*1.21*lumi*1000/weight_WJetsToLNu_HT_2500ToInf_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_400To600, 48.91*1.21*1*lumi*1000/weight_WJetsToLNu_HT_400To600->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_400To600_1	,48.91*1.21*1*lumi*1000/weight_WJetsToLNu_HT_400To600_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_600To800, 12.05*1*lumi*1000/weight_WJetsToLNu_HT_600To800->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_600To800_1, 12.05*1*lumi*1000/weight_WJetsToLNu_HT_600To800_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_800To1200, 5.501*1*lumi*1000/weight_WJetsToLNu_HT_800To1200->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WJetsToLNu_HT_800To1200_1, 5.501*1*lumi*1000/weight_WJetsToLNu_HT_800To1200_1->GetBinContent(1));
+	
+	//dataloader->AddBackgroundTree(tree_WJetsToLNu_1, *lumi*1000/weight_WJetsToLNu_1->GetBinContent(1));
+	//dataloader->AddBackgroundTree(tree_WJetsToLNu_2, *lumi*1000/weight_WJetsToLNu_2->GetBinContent(1));
+	//dataloader->AddBackgroundTree(tree_WJetsToLNu_madgraphMLM, *lumi*1000/weight_WJetsToLNu_madgraphMLM->GetBinContent(1));
+	//dataloader->AddBackgroundTree(tree_WJetsToLNu_madgraphMLM_1, *lumi*1000/weight_WJetsToLNu_madgraphMLM_1->GetBinContent(1));
+	
+	dataloader->AddBackgroundTree(tree_WWTo2L2Nu, 10.481*1*lumi*1000/weight_WWTo2L2Nu->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WWToLNuQQ, 43.53*1*lumi*1000/weight_WWToLNuQQ->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WWToLNuQQ_1, 43.53*1*lumi*1000/weight_WWToLNuQQ_1->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WZTo1L1Nu2Q_2, 10.71*1*lumi*1000/weight_WZTo1L1Nu2Q_2->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_WZTo2L2Q, 5.60*1*lumi*1000/weight_WZTo2L2Q->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_ZZTo2L2Nu, 0.564*1*lumi*1000/weight_ZZTo2L2Nu->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_ZZTo2L2Q, 3.28*1*lumi*1000/weight_ZZTo2L2Q->GetBinContent(1));
+	dataloader->AddBackgroundTree(tree_ZZTo2L2Q_1, 3.28*1*lumi*1000/weight_ZZTo2L2Q_1->GetBinContent(1));*/
    // Set individual event weights (the variables must exist in the original TTree)
    // -  for signal    : `dataloader->SetSignalWeightExpression    ("weight1*weight2");`
    // -  for background: `dataloader->SetBackgroundWeightExpression("weight1*weight2");`
-   //dataloader->SetBackgroundWeightExpression( "genWeight" );
-   dataloader->SetSignalWeightExpression( "1.0" );
+   dataloader->SetBackgroundWeightExpression( "Jet_btagSF_csvv2*puWeight*lepSF" );
+   dataloader->SetSignalWeightExpression( "Jet_btagSF_csvv2*puWeight*lepSF*nISRweight*Xsec" );
    //     factory->SetBackgroundWeightExpression("weight");
    TCut mycuts = ""; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
    TCut mycutb = ""; // for example: TCut mycutb = "abs(var1)<0.5";

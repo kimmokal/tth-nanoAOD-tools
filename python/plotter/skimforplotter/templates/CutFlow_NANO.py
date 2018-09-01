@@ -35,7 +35,7 @@ for i in range(t.GetEntries()):
 											if  t.Jet2_pt > 80 :
 												if t.HT > 500 :
 													if t.LT > 250 :
-														if t.nBJet >= 1: 
+														if t.nBJet >= 1:
 															outTree.Fill()
 
 outTree.AutoSave()

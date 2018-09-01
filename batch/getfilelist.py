@@ -29,11 +29,16 @@ if  os.path.exists('submit_all_to_batch_HTC.sh'):
    os.remove('submit_all_to_batch_HTC.sh')
 
 def getlistoffiles(sample):
-	
 	filelist = []
-	CMD = 'dasgoclient -query=\"file dataset='+str(sample)+'\"'
-	filelist = subprocess.check_output(CMD, shell=True)
-	filelist = filelist.split('\n')
+	if sample == "//SMS-T1tttt-Scan":
+		filelisttxt = open('SMS-T1tttt-Scan.txt','r')
+		for line in filelisttxt : 
+			line = line.strip()
+			filelist.append(line)
+	else : 
+		CMD = 'dasgoclient -query=\"file dataset='+str(sample)+'\"'
+		filelist = subprocess.check_output(CMD, shell=True)
+		filelist = filelist.split('\n')
 	fullpathlist = []
 	#filelist = commands.getstatusoutput('dasgoclient -query=\"file dataset='+str(sample)+'\"'),"\n"
 	for f in filelist :
@@ -53,8 +58,12 @@ def moduletorun(sample):
 	elif 'RunIIFall17' in str(sample) or "Run2017" in str(sample): era = 2017
 	if '/NANOAODSIM' in sample:
 		isMC = True 
-	if "/SMS-T1tttt" in sample:
+	if "/SMS-T1tttt" in sample :
 		isSIG = True
+	if "//SMS-T1tttt" in sample : 
+		isSIG = True
+		isMC = True 
+		era = 2016
 	if isMC and not isSIG : 
 		modu = "susy_1l_FiltersMC,jecUncert,susy1lepTOPMC,susy_1l_gen"#,xsec,genpartsusymod
 		if era == 2016 : 
@@ -62,16 +71,17 @@ def moduletorun(sample):
 		if era == 2017 :
 			# Temporarly use the jetmet uncertainty for 2016 
 			modu+=",jetmetUncertainties16,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,countHistogramAll_2017,susy_1l_Trigg2017,susy1lepMC17"
-		if "TTJets" in str(sample) and era == 2016: modu+=",susy_1l_nISR16"
-		if "TTJets" in str(sample) and era == 2017: modu+=",susy_1l_nISR17"
+		if "TTJets" in str(sample) and era == 2016: modu+=",susy_1l_nISR16,susy1lepTT_syst"
+		if "TTJets" in str(sample) and era == 2017: modu+=",susy_1l_nISR17,susy1lepTT_syst"
+		if "WJets"  in str(sample): modu+=",susy1lepWJets_syst"
 	elif isMC and isSIG :
-		modu = "susy_1l_FiltersMC,jecUncert,puWeight,susy1lepTOPMC,susy_1l_gen"#,xsec,genpartsusymod
+		modu = "susy_1l_FiltersMC,jecUncert,puWeight,susy1lepTOPMC,susy_1l_gen,susy1lepSIG_syst"#,xsec,genpartsusymod
 			# Temporarly use the jetmet uncertainty for 2016 
-		if era == 2016 : modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_1l_Sig16,countHistogramAll_2016,susy_1l_Trigg2016,susy1lepSIG"
-		if era == 2017 : modu+=",jetmetUncertainties16,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,susy_1l_Sig17,countHistogramAll_2017,susy_1l_Trigg2017,susy1lepSIG17"
+		if era == 2016 : modu+=",jetmetUncertainties16,puWeight_2016,btagSF_csvv2_2016,btagSF_cmva_2016,susy_1l_Sig16,countHistogramAll_2016,susy1lepSIG"
+		if era == 2017 : modu+=",jetmetUncertainties16,puWeight_2017,btagSF_csvv2_2017,btagSF_deep_2017,susy_1l_Sig17,countHistogramAll_2017,susy1lepSIG17"
 	else :
 		if era == 2016 : 
-			modu = "susy1lepdata,susy_1l_Trigg2016,susy_1l_FiltersData,susy1lepTOPData -J $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/JSONS/Cert_271036-284044_13TeV_PromptReco_Collisions16_JSON.txt"
+			modu = "susy1lepdata,susy_1l_Trigg2016,susy_1l_FiltersData,susy1lepTOPData"
 		elif era == 2017:
 			modu = "susy1lepdata17,susy_1l_Trigg2017,susy_1l_FiltersData,susy1lepTOPData -J $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/JSONS/Cert_294927-306462_13TeV_PromptReco_Collisions17_JSON.txt"
 	return modu
@@ -120,8 +130,12 @@ if __name__ == '__main__':
 		flist = getlistoffiles(line)
 		#print flist
 		getdir = line.split("/")
-		ext = getdir[2].split("-")
-		extension = ext[0]
+		if line == "//SMS-T1tttt-Scan":
+			ext = ""
+			extension = "Scan"
+		else : 
+			ext = getdir[2].split("-")
+			extension = ext[0]
 		
 		if "ver1" in getdir[2] : 
 			ext1 = "ver1"
