@@ -32,7 +32,7 @@ def getGenWandLepton(event):
         print "no gen lepton found!"
         return wP4, lepP4
 
-    lFromW = filter(lambda w:abs(w[w.genPartIdxMother].pdgId)==24, genLeps)
+    lFromW = filter(lambda w:abs(genParts[w.genPartIdxMother].pdgId)==24, genLeps)
 
     if len(lFromW) == 0:
         print "no gen W found!", genLeps
@@ -149,10 +149,9 @@ def getWPolWeights(event, sample):
     return wUp, wDown
 
 class susysinglelep_syst(Module):
-	def __init__(self, isMC , isSig, era, isTTJets,isWJets):#, HTFilter, LTFilter):#, muonSelection, electronSelection):
+	def __init__(self, isMC , isSig, isTTJets,isWJets):#, HTFilter, LTFilter):#, muonSelection, electronSelection):
 		self.isMC = isMC
 		self.isSig = isSig
-		self.era = era
 		self.isTTJets = isTTJets
 		self.isWJets = isWJets
 		if "/WPolarizationVariation_C.so" not in ROOT.gSystem.GetLibraries():
@@ -179,7 +178,7 @@ class susysinglelep_syst(Module):
 			# W polarisation
 			"WpolWup","WpolWdown",
 			# TTJets ISR 
-			'nISRtt','nISRttweight','nISRttweightsyst_up', 'nISRttweightsyst_down',
+			#'nISRtt','nISRttweight','nISRttweightsyst_up', 'nISRttweightsyst_down',
 			]
 		for branch in self.branchlist : 
 			#print branch
@@ -239,8 +238,9 @@ class susysinglelep_syst(Module):
 				GenAntiTopIdx = i_part
 				nGenTops+=1
 			if genPart.pdgId == 1000021:
+				if genParts[genPart.genPartIdxMother].pdgId == 1000021 : continue  
 				GluinoIdx.append(i_part)
-
+		#print "no. of Gos ", len(GluinoIdx)
 		if len(GluinoIdx)==2:
 			GenGluinoGluinop4 = genParts[GluinoIdx[0]].p4()+ genParts[GluinoIdx[1]].p4()
 			GenGluinoGluinoPt = GenGluinoGluinop4.Pt()
@@ -355,5 +355,6 @@ class susysinglelep_syst(Module):
 		
 		
 		return True
-susy1lepSIG_syst  = lambda : susysinglelep_syst(True , True,  "2016",True , False)
-susy1lepMC_syst   = lambda : susysinglelep_syst(True , False, "2016",True , False)
+susy1lepSIG_syst   = lambda : susysinglelep_syst(True , True , False, False)
+susy1lepTT_syst    = lambda : susysinglelep_syst(True , False, True , False)
+susy1lepWJets_syst = lambda : susysinglelep_syst(True , False, False, True )

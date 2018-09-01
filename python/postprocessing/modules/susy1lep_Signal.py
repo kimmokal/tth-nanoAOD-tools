@@ -120,6 +120,12 @@ class susy1lepSig(Module):
 		self.out.branch("nISRweight","F");
 		self.out.branch("nISRweightsyst_up","F");
 		self.out.branch("nISRweightsyst_down","F");
+		# not used in any thing in the analysis just for tree alignment 
+		self.out.branch('HLT_EleOR','F'); 
+		self.out.branch('HLT_MuOR','F'); 
+		self.out.branch('HLT_LepOR','F'); 
+		self.out.branch('HLT_MetOR','F'); 
+		
 		self.inFile = inputFile.GetName();
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -228,7 +234,7 @@ class susy1lepSig(Module):
 		##############
 		if (mGo,mLSP) in cntsSusy:
 			#ret['totalNgen'] = cntsSusy[(mGo,mLSP)][0] # merged scan: 93743963
-			if self.isScan == True : self.out.fillBranch("totalNgen", 93743963)
+			if self.isScan == True : self.out.fillBranch("totalNgen", 31135695)
 			else: self.out.fillBranch("totalNgen", cntsSusy[(mGo,mLSP)][0])
 			self.out.fillBranch("susyNgen",cntsSusy[(mGo,mLSP)][1])
 			self.out.fillBranch("susyWgen", cntsSusy[(mGo,mLSP)][2])
@@ -236,10 +242,17 @@ class susy1lepSig(Module):
 			self.out.fillBranch("totalNgen", 1)
 			self.out.fillBranch("susyNgen",1)
 			self.out.fillBranch("susyWgen",1)
+			
+		### for combatibility only -- not used in any thing else 
+		self.out.fillBranch('HLT_EleOR', 1)
+		self.out.fillBranch('HLT_MuOR', 1)
+		self.out.fillBranch('HLT_LepOR', 1)
+		self.out.fillBranch('HLT_MetOR', 1)
+		
 		
 		return True
         
 
 # define modules using the syntax 'name = lambda : constructor' to avoid having them loaded when not needed
-susy_1l_Sig16  = lambda : susy1lepSig(False,True,False)
-susy_1l_Sig17  = lambda : susy1lepSig(False,False,True)
+susy_1l_Sig16  = lambda : susy1lepSig(True,True,False)
+susy_1l_Sig17  = lambda : susy1lepSig(True,False,True)

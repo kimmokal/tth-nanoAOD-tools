@@ -46,5 +46,5 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer im
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import muonScaleRes2016, muonScaleRes2017
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import jetmetUncertainties2016, jetmetUncertainties2017
 ############ SUSY 1L-dPhi systematics ###############
-from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_syst import susy1lepSIG_syst,susy1lepMC_syst 
+from tthAnalysis.NanoAODTools.postprocessing.modules.susy1lep_syst import susy1lepSIG_syst,susy1lepTT_syst,susy1lepWJets_syst 
 
