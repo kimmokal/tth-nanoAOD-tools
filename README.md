@@ -13,9 +13,9 @@ cmsenv
 
 # clone necessary repositories
 git cms-merge-topic cms-nanoAOD:master
-git clone https://github.com/HEP-KBFI/nanoAOD-tools.git     $CMSSW_BASE/src/PhysicsTools/NanoAODTools
-git clone https://github.com/HEP-KBFI/tth-nanoAOD-tools.git $CMSSW_BASE/src/tthAnalysis/NanoAODTools
-
+git checkout -b nanoAOD cms-nanoAOD/master
+git clone https://github.com/cms-nanoAOD/nanoAOD-tools.git CMSSW_BASE/src/PhysicsTools/NanoAODTools
+git clone https://github.com/ashrafkasem/tth-nanoAOD-tools.git $CMSSW_BASE/src/tthAnalysis/NanoAODTools
 # compile the thing
 cd $CMSSW_BASE/src
 scram b -j 16
@@ -31,39 +31,35 @@ cmsRun nano_cfg.py                           # probably change the paths to the 
 ## How to run the post-processing steps:
 
 The output file name is created by appending a suffix to the basename of the input file, specified by the option `-s`.
-
+example for running the post-processing interactively
 ```bash
-export NANOAOD_OUTPUT_DIR=~/sandbox/nanoAODs # or any other directory you prefer
-mkdir -p $NANOAOD_OUTPUT_DIR
+nano_postproc.py -s _I2 -I tthAnalysis.NanoAODTools.postprocessing.tthModules susy1lepMC ./nanoAODs_HT/ inputfile.root 
 
-# choose an era between 2016 and 2017
-ERA=2017
-
-# if running on 2017 MC, you need to set these variables in order to evaluate PU weights
-PILEUP=/some/path/to/a/file/containing/pu/histograms.root
-SAMPLE_NAME=effectively_histogram_name
-
-# decide which modules you need to run
-NANO_MODULES_DATA="lepJetVarBTagAll_$ERA,absIso,tauIDLog_$ERA,jetSubstructureObservablesHTTv2,trigObjMatcher"
-NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,puWeight_$ERA($PILEUP;$SAMPLE_NAME),jetmetUncertainties$ERA,btagSF_csvv2_$ERA"
-if [ "$ERA" = "2016" ]; then
-  NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_cmva_$ERA";
-elif [ "$ERA" == "2017" ]; then
-  NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_deep_$ERA";
-fi
-NANO_MODULES=NANO_MODULES_MC
-
-nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules $NANO_MODULES \
-  $NANOAOD_OUTPUT_DIR ../NanoAOD/test/nano.root
-
-# remove unused branches (cannot remove the branches we're working with, hence the 2nd command)
-nano_postproc.py -s i -I tthAnalysis.NanoAODTools.postprocessing.tthModules countHistogramAll_$ERA \
-  -b $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/keep_or_drop.txt                           \
-  $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_i.root
-
-# the final output file will be at:
-ls -l $NANOAOD_OUTPUT_DIR/nano_ii.root
 ```
+use the option `-b keep-and-drop.txt` for keeping or dropping branches after proccessing
+use the option `-J $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/JSONS/Cert_271036-284044_13TeV_PromptReco_Collisions16_JSON.txt` in case you want to use the lumiMask
+
+in order to run over all out susy1L MC, Data or signals 
+```bash
+cd tthAnalysis/NanoAODTools/batch
+python getfilelist.py datesets.txt --out /path/to/out/dir --site DESY/Bari
+```
+i've listed all of them in text files. I wrote this script to run over all the list you provide and it will recognaize automatically the modules to run and it will differentiate between data/MC/Signal also it will recognize automatically the era (2016/2017)
+each time the `getfilelist.py` will produce a `.sh` script called `submit_all_to_batch_HTC.sh` all what you need is to run run it and it will submitt the jobs to HTC either at DEST or Bari
+
+you can do the same with crab if you want to skim the samples from a cluster rather then DESY/BARI by : 
+```bash
+cd tthAnalysis/NanoAODTools/crab
+python prepare_crabdir.py dataList --out /path/to/out/dir
+./submit_all_CRABs.sh
+```
+
+after you get the output you can merge each sample with `merge_skimout.py`
+it can run either interactively or on batch as : 
+```bash
+/merge_skimout.py --indir /path/to/in/dir --outdir /path/to/out/dir [in case of batch mode use] -b --site DESY/Bari
+``` 
+removing -b and --site options means you will run the merging interactively 
 
 If you want to add more modules then you must add the relevant import statements to `$CMSSW_BASE/src/tthAnalysis/NanoAODTools/python/postprocessing/tthModules.py` and recompile the NanoAODTools packages in `PhysicsTools` and `tthAnalysis` in order for the changes to take effect.
 
@@ -73,3 +69,7 @@ If you want to add more modules then you must add the relevant import statements
 1. nanoAOD fork of CMSSW (complementary): https://github.com/cms-nanoAOD/cmssw/tree/master/PhysicsTools/NanoAOD
 1. Our own nanoAOD-tools fork: https://github.com/HEP-KBFI/nanoAOD-tools
 1. Our own fork of the CMSSW FW, based off the official nanoAOD fork: https://github.com/HEP-KBFI/cmssw
+
+## ToDo 
+1. push the plotter from my local repo to the github along with the skimmer
+1. i've modifed all the proper scripts for the analysis and limit setting to run with HTC and nanoAOD, i just need to see how to push them to the same repo as the dir is contains alot of root files, i need to exclude them. 

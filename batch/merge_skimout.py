@@ -66,7 +66,7 @@ if __name__ == '__main__':
 	subdires = [f for f in listdir(indire) ]
 	for subdir in subdires:
 		if subdir.startswith('.'):  continue
-		rootfiles = find_all_matching('.root',indire+subdir)
+		rootfiles = find_all_matching('_Trim.root',indire+subdir)
 		to_merge=''
 		for rf in rootfiles:
 			f = TFile(rf,'READ')
