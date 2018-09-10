@@ -26,6 +26,12 @@ class genpartsusy(Module):
 		self.out.branch("nidxGenWs","I");
 		self.out.branch("GenmTLepNu","F");
 		self.out.branch("LeptonDecayChannelFlag","I");
+		self.out.branch("genTau_grandmotherId","F");
+		self.out.branch("genTau_motherId","F");
+		self.out.branch("genLep_grandmotherId","F");
+		self.out.branch("genLep_motherId","F");
+		#self.out.branch("IsDiLepEvent","O");
+		#self.out.branch("IsSemiLepEvent","O");
 	def mt_2(p4one, p4two):
 		return sqrt(2*p4one.Pt()*p4two.Pt()*(1-cos(p4one.Phi()-p4two.Phi())))
 	def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -34,16 +40,17 @@ class genpartsusy(Module):
 		"""process event, return True (go to next module) or False (fail, go to next event)"""
 		genpart = Collection(event, "GenPart")
 		# The following variables still need to be double-checked for validity
-		genLeps = [l for l in genpart if l.pdgId == (13 or -13 or 11 or -11) ]
+		genLeps = [l for l in genpart if l.pdgId == (13 or -13 or 11 or -11) and l.genPartIdxMother >= 0 ]
 		# for some reason TTjets_* doesnot have GenPart_statusFla; better to check it before use it 
 		if hasattr(event,"GenPart_statusFlags"):
 			genLepFromTau = [l for l in genLeps if l.statusFlags == 2]
 		else :genLepFromTau = [l for l in genLeps]
-		genTaus = [l for l in genpart if l.pdgId == (15 or -15)]
+		genTaus = [l for l in genpart if l.pdgId == (15 or -15) and l.genPartIdxMother >= 0]
 		genParts = [l for l in genpart]
 		#leptons from tau decay https://github.com/cms-nanoAOD/cmssw/blob/master/PhysicsTools/NanoAOD/python/genparticles_cff.py#L67
 		genLepsAndLepsFromTaus = [l for l in genLeps] + [ l for l in genLepFromTau]
 		
+		#### for genlept mother and grandmother ID 		
 		#print genLepsAndLepsFromTaus
 		ngenLepFromTau = len(genLepFromTau)
 		ngenLeps = len(genLeps)
@@ -60,8 +67,32 @@ class genpartsusy(Module):
 		idx_genWs=[]
 		idx_genLeps=[]
 		idx_genNus=[]
+		genLep_motherId = -999
+		genLep_motherIdx = -999
+		genLep_grandmotherId = -999
+		genTau_motherId = -999
+		genTau_motherIdx = -999
+		genTau_grandmotherId = -999
 		# find gen-level neutrinos (status 23), calculate deltaPhi (lep, nu), and genW-masses m(lep+nu)
 		# for this: start from genLeps (status 23)
+		for glep in genLeps: 
+			if glep.status == 23 : 
+				genLep_motherId = genpart[glep.genPartIdxMother].pdgId
+				genLep_motherIdx = glep.genPartIdxMother
+				genLep_grandmotherIdx = genpart[genLep_motherIdx].genPartIdxMother
+				if genLep_grandmotherIdx >=0 : 
+					genLep_grandmotherId = genpart[genLep_grandmotherIdx].pdgId
+				self.out.fillBranch("genLep_motherId",genLep_motherId)
+				self.out.fillBranch("genLep_grandmotherId",genLep_grandmotherId)
+		
+		for gtau in genTaus:  
+			genTau_motherId = genpart[gtau.genPartIdxMother].pdgId
+			genTau_motherIdx = gtau.genPartIdxMother
+			genTau_grandmotherIdx = genpart[genTau_motherIdx].genPartIdxMother
+			if genTau_grandmotherIdx >=0:
+				genTau_grandmotherId = genpart[genTau_grandmotherIdx].pdgId
+			self.out.fillBranch("genTau_motherId",genLep_motherId)
+			self.out.fillBranch("genTau_grandmotherId",genTau_grandmotherId)
 		
 		for i_lep, genLep in enumerate(genLeps):
 			if genLep.status == 23 and abs(genParts[genLep.genPartIdxMother].pdgId) == 24: # genLep is outgoing and has W as mother
@@ -108,8 +139,7 @@ class genpartsusy(Module):
 				elif IsHadTauEvent: LeptonDecayChannelFlag = 1 # HadTau (only)
 				elif not LeptonsInAcceptance: LeptonDecayChannelFlag = 2 # OutOfAcceptance (only)
 				else: LeptonDecayChannelFlag = 3 # Rest (Id/Isolation/Resolution)
-			
-		
+
 		self.out.fillBranch("GenDeltaPhiLepWSum", GenDeltaPhiLepWSum) #initialize the dictionary with a first entry
 		self.out.fillBranch("GenDeltaPhiLepWDirect", GenDeltaPhiLepWDirect)
 		self.out.fillBranch("GenWSumMass", GenWSumMass)

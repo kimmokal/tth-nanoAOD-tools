@@ -980,7 +980,6 @@ class susysinglelep(Module):
 						self.out.fillBranch("iso_had", 1)  #hadronic track
 						cut=hadMT2cut
 					if mt2obj.get_mt2()<=cut: self.out.fillBranch("iso_Veto",True)
-			
 		self.out.fillBranch("Xsec",self.xs)
 		if 'JetHT' in self.filename:
 			self.out.fillBranch("PD_JetHT",True)
