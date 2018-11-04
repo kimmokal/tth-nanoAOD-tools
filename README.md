@@ -7,8 +7,8 @@ Postprocessing scripts to add branches specific to ttH analysis to nanoAOD Ntupl
 # set up the CMSSW environment
 source /cvmfs/cms.cern.ch/cmsset_default.sh # !! or .csh
 export SCRAM_ARCH=slc6_amd64_gcc630 # !! or setenv SCRAM_ARCH slc6_amd64_gcc630
-cmsrel CMSSW_9_4_9
-cd CMSSW_9_4_9/src/
+cmsrel CMSSW_9_4_11_cand1
+cd CMSSW_9_4_11_cand1/src/
 cmsenv
 
 # clone necessary repositories
@@ -16,7 +16,9 @@ git cms-merge-topic cms-nanoAOD:master
 git checkout -b nanoAOD cms-nanoAOD/master
 git clone https://github.com/cms-nanoAOD/nanoAOD-tools.git $CMSSW_BASE/src/PhysicsTools/NanoAODTools
 git clone https://github.com/DESY-CMS-SUS/tth-nanoAOD-tools.git $CMSSW_BASE/src/tthAnalysis/NanoAODTools
-# compile the thing
+# copy WeightCalculatorFromHistogram to the right directory
+cp $CMSSW_BASE/src/PhysicsTools/NanoAODTools/src/WeightCalculatorFromHistogram.cc $CMSSW_BASE/src/PhysicsTools/NanoAODTools/python/postprocessing/helpers/ 
+# compile
 cd $CMSSW_BASE/src
 scram b -j 16
 ```
