@@ -45,7 +45,7 @@ cd tthAnalysis/NanoAODTools/batch
 python getfilelist.py datesets.txt --out /path/to/out/dir --site DESY/Bari
 ```
 i've listed all of them in text files. I wrote this script to run over all the list you provide and it will recognaize automatically the modules to run and it will differentiate between data/MC/Signal also it will recognize automatically the era (2016/2017)
-each time the `getfilelist.py` will produce a `.sh` script called `submit_all_to_batch_HTC.sh` all what you need is to run run it and it will submitt the jobs to HTC either at DEST or Bari
+each time the `getfilelist.py` will produce a `.sh` script called `submit_all_to_batch_HTC.sh` all what you need is to run it and it will submit the jobs to HTC either at DESY or Bari
 
 you can do the same with crab if you want to skim the samples from a cluster rather then DESY/BARI by : 
 ```bash
